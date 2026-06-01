@@ -14,6 +14,12 @@ kitchen-living-room/
 └── libraries.txt
 ```
 
+## Live Simulation
+
+The Kitchen and Living Room module can be opened directly in Wokwi:
+
+[Open Kitchen and Living Room Wokwi simulation](https://wokwi.com/projects/465661368262601729)
+
 ## Main Features
 
 - ESP32-S3 based Wokwi simulation
