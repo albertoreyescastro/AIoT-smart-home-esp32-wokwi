@@ -14,6 +14,12 @@ bedroom/
 └── libraries.txt
 ```
 
+## Live Simulation
+
+The Bedroom module can be opened directly in Wokwi:
+
+[Open Bedroom Wokwi simulation](https://wokwi.com/projects/465661521735358465)
+
 ## Main Features
 
 - ESP32-S3 based Wokwi simulation
