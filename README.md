@@ -42,7 +42,6 @@ aiot-smart-home-esp32-wokwi/
 │       └── libraries.txt
 ├── edge-impulse/
 ├── data/
-├── figures/
 └── report/
 ```
 
