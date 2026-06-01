@@ -99,6 +99,14 @@ The two room-level simulations can be opened directly in Wokwi:
 - **Bedroom Module**: [Open Wokwi simulation](https://wokwi.com/projects/465661521735358465)
 - **Kitchen and Living Room Module**: [Open Wokwi simulation](https://wokwi.com/projects/465661368262601729)
 
+## 2D and 3D House Model
+
+A 2D and 3D visual model of the smart home layout is available through Planner 5D:
+
+[Open 2D/3D house model](https://planner5d.onelink.me/stDT/wjmc3u8i)
+
+Note: the model is best opened on a laptop or desktop browser. On mobile devices, Planner 5D may ask the user to download the app.
+
 ## Blynk Configuration
 
 The public version of the code uses placeholder credentials:
