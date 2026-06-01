@@ -19,3 +19,7 @@ To enable the real Edge Impulse runtime, the required inferencing library must b
 The rule-based safety logic remains available as a fallback for simulation and demonstration purposes.
 
 The Edge Impulse export is included as a compressed file in this repository because GitHub web upload may not preserve the full exported folder structure easily.
+
+## License Note
+
+The exported Edge Impulse inferencing package may include third-party SDK components under their own licences. The repository MIT licence applies to the project code and documentation unless otherwise stated by the included exported library files.
