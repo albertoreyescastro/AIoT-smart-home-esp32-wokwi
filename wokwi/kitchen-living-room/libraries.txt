@@ -6,4 +6,7 @@ LiquidCrystal I2C
 DHT sensor library for ESPx
 DHT sensor library
 BlynkESP32_BT_WF
-albertoreyes837-project-1_inferencing@wokwi:e7a98fd4d4e89e3a079a56fee3741fb2b1380bb8
+# Optional Edge Impulse inferencing library.
+# Enable only if the exported Edge Impulse runtime is available and
+# USE_EDGE_IMPULSE_RUNTIME is set to 1 in sketch.ino.
+# albertoreyes837-project-1_inferencing@wokwi:e7a98fd4d4e89e3a079a56fee3741fb2b1380bb8
