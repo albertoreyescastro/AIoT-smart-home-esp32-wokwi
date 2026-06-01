@@ -92,6 +92,13 @@ Folder:
 wokwi/kitchen-living-room/
 ```
 
+## Live Simulations
+
+The two room-level simulations can be opened directly in Wokwi:
+
+- **Bedroom Module**: [Open Wokwi simulation](https://wokwi.com/projects/465661521735358465)
+- **Kitchen and Living Room Module**: [Open Wokwi simulation](https://wokwi.com/projects/465661368262601729)
+
 ## Blynk Configuration
 
 The public version of the code uses placeholder credentials:
