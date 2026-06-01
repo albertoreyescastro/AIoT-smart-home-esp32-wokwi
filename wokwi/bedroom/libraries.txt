@@ -1,0 +1,8 @@
+# Wokwi Library List
+# See https://docs.wokwi.com/guides/libraries
+
+ESP32Servo
+LiquidCrystal I2C
+DHT sensor library for ESPx
+DHT sensor library
+BlynkESP32_BT_WF
