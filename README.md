@@ -66,7 +66,7 @@ This project is more than a basic smart home simulation. It combines room-specif
 
 ### Simulation and AI Results
 
-| Kitchen/Living Room Simulation | Intruder Alert Scenario |
+| Kitchen/Living Room Simulation |Bedroom Simulation |
 |---|---|
 | <img src="assets/kitchen-wokwi-serial.png" alt="Kitchen and living room Wokwi simulation and Serial Monitor"/> | <img src="assets/intruder-alert-demo.png" alt="Intruder alert scenario in Wokwi"/> |
 
