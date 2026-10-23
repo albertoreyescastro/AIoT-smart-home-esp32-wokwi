@@ -5,109 +5,199 @@
 <h1 align="center">AIoT Smart Home ESP32-S3</h1>
 
 <p align="center">
-  ESP32-S3 smart home simulation combining Wokwi, Blynk, rule-based automation and an Edge Impulse / TinyML environmental safety workflow.
+  Simulation-based ESP32-S3 smart-home prototype combining Wokwi, Blynk, deterministic automation and a transparent TinyML experimentation path.
 </p>
 
 <p align="center">
   <a href="https://wokwi.com/projects/465661521735358465">Bedroom Wokwi Demo</a> ·
   <a href="https://wokwi.com/projects/465661368262601729">Kitchen/Living Room Wokwi Demo</a> ·
   <a href="report/aiot_smart_home_public_report.pdf">Technical Report</a> ·
-  <a href="https://planner5d.onelink.me/stDT/wjmc3u8i">2D/3D House Model</a>
+  <a href="docs/REPRODUCIBILITY.md">Reproducibility Notes</a>
 </p>
 
 ---
 
 ## Overview
 
-This repository presents a simulation-based **AIoT smart home prototype** built around ESP32-S3 room controllers.
+This repository presents a **simulation-based AIoT smart-home prototype** built around two ESP32-S3 room controllers.
 
-The project combines:
+It demonstrates:
 
-- Embedded systems programming with Arduino/C++
-- Sensor-based automation using simulated hardware
-- Local rule-based decision logic
-- Blynk IoT dashboard interaction
-- Environmental safety monitoring
-- A simulated Edge Impulse / TinyML workflow
-- Technical documentation, visual assets and a public project report
+- embedded Arduino/C++ programming;
+- sensor/actuator orchestration in Wokwi;
+- local comfort, privacy, security and environmental-safety logic;
+- Blynk dashboard integration;
+- a synthetic environmental dataset;
+- an Edge Impulse / TinyML experimentation workflow;
+- explicit separation between deterministic safety behaviour and ML experimentation;
+- reproducibility checks and CI for the public repository.
 
-The system is divided into two main room-level modules:
-
-| Module | Purpose |
-|---|---|
-| **Bedroom** | Adaptive lighting, privacy-aware blind control, user profiles, comfort logic and Home/Away security behaviour |
-| **Kitchen/Living Room** | Gas detection, environmental monitoring, emergency response, Blynk interaction and AI-inspired classification |
-
-This project was developed as an academic and portfolio prototype to demonstrate how embedded IoT, automation logic and AI-assisted environmental classification can be combined in a modular smart home architecture.
+The project is an academic/portfolio prototype. It is **not a production safety system**, and the TinyML results are not presented as real-world hazard-detection validation.
 
 ---
 
 ## Recruiter Snapshot
 
-This project demonstrates practical work across embedded systems, IoT simulation, software architecture and AI workflow design.
+| Area | Evidence in this repository |
+|---|---|
+| Embedded systems | Two ESP32-S3 Arduino sketches with room-level state/control logic |
+| IoT simulation | Public Wokwi demos for Bedroom and Kitchen/Living Room modules |
+| Cloud/dashboard integration | Blynk virtual-pin monitoring and interaction |
+| Safety-state modelling | Gas, heat, occupancy and escalation logic with deterministic fallback |
+| TinyML workflow | Synthetic dataset, Edge Impulse training/test evidence and optional inference integration point |
+| Reproducibility | Dataset/rule validator plus GitHub Actions quality checks |
+| Documentation | Architecture visuals, module notes and sanitised technical report |
 
-Key points:
+### What the ML result does — and does not — show
 
-- Built two separate ESP32-S3 Wokwi simulations with complete room-level logic.
-- Implemented sensor-driven automation using PIR, LDR, DHT22 and MQ2 inputs.
-- Designed comfort, privacy, security and safety behaviours using deterministic control logic.
-- Integrated Blynk virtual pins for dashboard monitoring and remote interaction.
-- Created a simulated environmental dataset for Edge Impulse classification.
-- Exported an Edge Impulse inference package for embedded-AI experimentation.
-- Documented the full design through diagrams, screenshots, datasets and a public technical report.
-- Kept public credentials sanitised using placeholders instead of real tokens.
+The environmental dataset is **simulated and rule-labelled**. Labels are generated from demonstration thresholds using the same synthetic variables supplied to the model. Strong classifier performance is therefore expected: it shows that an embedded-ML workflow can learn the designed decision regions, not that the model has independently discovered real household hazards.
+
+Real-world validation would require physical sensors, calibration, independently labelled data, hardware measurements and a safety review.
+
+See [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) for the full evaluation protocol and caveats.
 
 ---
 
-## Quick Demo
+## Live Demos
 
-| Component | Link | Description |
+| Component | Link | Purpose |
 |---|---|---|
-| Bedroom Simulation | [Open in Wokwi](https://wokwi.com/projects/465661521735358465) | Adaptive lighting, privacy-aware blinds, user profiles and Away-mode security |
-| Kitchen/Living Room Simulation | [Open in Wokwi](https://wokwi.com/projects/465661368262601729) | Gas monitoring, thermal logic, emergency response and Blynk interaction |
-| 2D/3D House Model | [Open Planner 5D model](https://planner5d.onelink.me/stDT/wjmc3u8i) | Visual smart home layout and room distribution |
-| Technical Report | [Open PDF report](report/aiot_smart_home_public_report.pdf) | Public project report with design, implementation, evaluation and limitations |
-
-> The Planner 5D model is best opened on a laptop or desktop browser. On mobile devices, Planner 5D may request the app.
+| Bedroom | [Open in Wokwi](https://wokwi.com/projects/465661521735358465) | Lighting, blinds, comfort, profiles and Home/Away security |
+| Kitchen/Living Room | [Open in Wokwi](https://wokwi.com/projects/465661368262601729) | Gas/heat monitoring, emergency logic and Blynk interaction |
+| 2D/3D house model | [Open Planner 5D](https://planner5d.onelink.me/stDT/wjmc3u8i) | Visual layout of the smart-home concept |
+| Technical report | [Open PDF](report/aiot_smart_home_public_report.pdf) | Design, implementation, evaluation and limitations |
 
 ---
 
-## What Makes This Project Different?
+## Architecture
 
-This is not only a basic sensor demo. The project combines multiple layers of smart home behaviour into a single AIoT simulation:
+```text
+Smart Home Prototype
+│
+├── Bedroom ESP32-S3
+│   ├── PIR occupancy
+│   ├── indoor/outdoor light sensing
+│   ├── DHT22 temperature/humidity
+│   ├── servo-controlled blinds
+│   ├── PWM lighting
+│   ├── AC relay + LCD
+│   ├── profile/privacy logic
+│   └── Home/Away security state
+│
+└── Kitchen/Living Room ESP32-S3
+    ├── MQ2 gas input
+    ├── DHT22 temperature/humidity
+    ├── PIR occupancy
+    ├── visual/audible alerts
+    ├── emergency cooling indicator
+    ├── Blynk dashboard
+    ├── deterministic safety rules
+    └── optional Edge Impulse inference layer
+```
 
-- **Room-level intelligence:** each room has its own ESP32-S3 controller, sensor set and local decision logic.
-- **Hybrid automation:** deterministic rules handle safety-critical behaviours, while the AI workflow supports environmental classification.
-- **User-aware control:** the system adapts to Standard, Elderly and Child profiles.
-- **Privacy-aware behaviour:** blind control and lighting decisions consider privacy, sleep and occupancy states.
-- **Safety escalation:** gas, heat and intrusion scenarios trigger different alert and emergency responses.
-- **Cloud-assisted monitoring:** Blynk is used for dashboard interaction while core logic remains local.
-- **Portfolio-ready documentation:** the repository includes code, diagrams, datasets, Wokwi simulations, AI export material and a technical report.
+The deterministic path remains authoritative in the public simulation. The optional ML path is treated as an experiment and never as the sole basis for a safety-critical action.
 
 ---
 
-## Visual Overview
+## Bedroom Module
 
-### System Layout
+Location: [`wokwi/bedroom/`](wokwi/bedroom/)
+
+Main behaviours:
+
+- Normal, Sleep, Privacy and Eco modes;
+- Standard, Elderly and Child profiles;
+- adaptive lighting using indoor/outdoor brightness;
+- servo-controlled blind automation;
+- PIR-based occupancy tracking;
+- temperature/humidity monitoring;
+- AC relay logic with hysteresis;
+- Home/Away state;
+- suspicious-motion and intruder escalation;
+- demonstration-only authentication/recovery flows.
+
+The public sketch uses placeholder Blynk credentials and Wokwi's simulated Wi-Fi network.
+
+---
+
+## Kitchen / Living Room Module
+
+Location: [`wokwi/kitchen-living-room/`](wokwi/kitchen-living-room/)
+
+Main behaviours:
+
+- MQ2-based simulated gas monitoring;
+- DHT22 temperature/humidity sensing;
+- gas warning/danger persistence logic;
+- heat anomaly and gas+heat emergency states;
+- buzzer and visual alerts;
+- Blynk dashboard updates;
+- deterministic fallback safety logic;
+- optional Edge Impulse classifier integration.
+
+The public build keeps the generated Edge Impulse runtime disabled by default:
+
+```cpp
+#define USE_EDGE_IMPULSE_RUNTIME 0
+```
+
+This makes the Wokwi simulation runnable and auditable without a proprietary/generated deployment package.
+
+---
+
+## TinyML / Edge Impulse Experiment
+
+### Dataset
+
+[`data/environmental_training_dataset.csv`](data/environmental_training_dataset.csv) contains:
+
+- `gas_score` — simulated MQ2 score, 0–1000;
+- `temperature` — simulated DHT22 temperature in °C;
+- `humidity` — simulated relative humidity in %;
+- `label` — one of five environmental states.
+
+Synthetic labels are generated from demonstration rules:
+
+| Rule | Label |
+|---|---|
+| `gas_score >= 850` and `temperature >= 55°C` | `GAS_HEAT_EMERGENCY` |
+| `gas_score >= 850` | `GAS_DANGER` |
+| `temperature >= 55°C` | `HEAT_ANOMALY` |
+| `gas_score >= 420` | `COOKING_FUMES` |
+| otherwise | `NORMAL` |
+
+These are **not calibrated safety thresholds**. Humidity is included as an input feature but does not determine the synthetic ground-truth label in this experiment.
+
+### Model evidence
+
+The repository retains Edge Impulse training/test screenshots under [`assets/`](assets/) so the experiment remains inspectable.
+
+A generated inferencing ZIP is intentionally not redistributed in the hardened public source tree. Generated Edge Impulse deployment packages can include SDK/runtime and third-party material under licence terms separate from this repository's MIT-licensed original code. The reproduction path is documented in [`edge-impulse/README.md`](edge-impulse/README.md).
+
+---
+
+## Visual Evidence
+
+### System layout
 
 <p align="center">
   <img src="assets/system-layout.png" alt="AIoT smart home system layout" width="100%"/>
 </p>
 
-### Simulation Screenshots
+### Simulation
 
-| Kitchen/Living Room Simulation | Bedroom Intruder Alert Demo |
+| Kitchen/Living Room | Bedroom intruder alert |
 |---|---|
 | <img src="assets/kitchen-wokwi-serial.png" alt="Kitchen and living room Wokwi simulation and Serial Monitor"/> | <img src="assets/intruder-alert-demo.png" alt="Bedroom intruder alert scenario in Wokwi"/> |
 
-### Edge Impulse Results
+### Edge Impulse experiment
 
-| Test Results | On-Device Performance |
+| Test results | Estimated on-device performance |
 |---|---|
-| <img src="assets/edge-impulse-test-results.png" alt="Edge Impulse test results and confusion matrix"/> | <img src="assets/edge-impulse-on-device-performance.png" alt="Edge Impulse on-device performance"/> |
+| <img src="assets/edge-impulse-test-results.png" alt="Edge Impulse test results and confusion matrix"/> | <img src="assets/edge-impulse-on-device-performance.png" alt="Edge Impulse estimated on-device performance"/> |
 
 <details>
-<summary>Additional Edge Impulse training results</summary>
+<summary>Additional Edge Impulse training screenshot</summary>
 
 <p align="center">
   <img src="assets/edge-impulse-training-results.png" alt="Edge Impulse training performance" width="70%"/>
@@ -117,78 +207,64 @@ This is not only a basic sensor demo. The project combines multiple layers of sm
 
 ---
 
-## Project Objectives
+## Repository Quality Checks
 
-The objective of this project is to design and simulate a smart home prototype capable of responding to environmental conditions, user preferences and safety risks in real time.
+Run locally from the repository root:
 
-The system focuses on:
+```bash
+python scripts/validate_repo.py
+```
 
-- Adaptive lighting control
-- Privacy-aware blind automation
-- Energy-conscious behaviour
-- Gas and environmental safety monitoring
-- Profile-based user adaptation
-- Home/Away security behaviour
-- Remote dashboard monitoring through Blynk
-- Modular room-level smart home design
-- Embedded AI / TinyML workflow experimentation
+The validator checks:
+
+- CSV schema and sensor-value ranges;
+- presence of all five classes;
+- every row against the documented synthetic labelling rules;
+- Wokwi diagram JSON integrity;
+- public Blynk placeholders;
+- obvious token/credential patterns in the sketches;
+- Edge Impulse runtime disabled by default;
+- public-surface safety/limitations statements.
+
+GitHub Actions additionally attempts to compile both ESP32-S3 sketches with the optional Edge Impulse runtime disabled.
 
 ---
 
-## System Architecture
+## Blynk Configuration
 
-The project follows a modular room-controller architecture.
+The public sketches intentionally contain placeholders:
 
-```text
-Smart Home System
-│
-├── Bedroom Controller
-│   ├── LDR sensors
-│   ├── PIR motion sensor
-│   ├── DHT22 temperature/humidity sensor
-│   ├── Servo-controlled blinds
-│   ├── PWM lighting
-│   ├── LCD display
-│   └── Security and profile logic
-│
-└── Kitchen/Living Room Controller
-    ├── MQ2 gas sensor
-    ├── DHT22 temperature/humidity sensor
-    ├── PIR motion sensor
-    ├── Buzzer and alert outputs
-    ├── Emergency cooling indicator
-    ├── Blynk dashboard integration
-    └── Edge Impulse / TinyML workflow
+```cpp
+#define BLYNK_TEMPLATE_ID "YOUR_TEMPLATE_ID"
+#define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
 ```
 
-The system separates comfort automation, privacy behaviour, security logic and environmental safety into different functional areas. This makes the project easier to extend with real hardware or additional rooms in the future.
+`Wokwi-GUEST` is used only as the simulator network.
+
+Any PINs or secret words visible in the source are **demonstration values**, not credentials suitable for a real deployment. Real secrets should be kept outside source control using an appropriate secrets/configuration mechanism.
 
 ---
 
 ## Repository Structure
 
 ```text
-aiot-smart-home-esp32-wokwi/
+.
+├── .github/workflows/quality.yml
 ├── README.md
 ├── LICENSE
-├── .gitignore
 ├── assets/
-│   ├── aiot-smart-home-logo.png
-│   ├── system-layout.png
-│   ├── kitchen-wokwi-serial.png
-│   ├── intruder-alert-demo.png
-│   ├── edge-impulse-test-results.png
-│   ├── edge-impulse-on-device-performance.png
-│   └── edge-impulse-training-results.png
 ├── data/
 │   ├── README.md
 │   └── environmental_training_dataset.csv
+├── docs/
+│   └── REPRODUCIBILITY.md
 ├── edge-impulse/
-│   ├── README.md
-│   └── edge_impulse_kitchen_living_room_inferencing.zip
+│   └── README.md
 ├── report/
 │   ├── README.md
 │   └── aiot_smart_home_public_report.pdf
+├── scripts/
+│   └── validate_repo.py
 └── wokwi/
     ├── bedroom/
     │   ├── README.md
@@ -204,314 +280,72 @@ aiot-smart-home-esp32-wokwi/
 
 ---
 
-## Technologies Used
+## Technologies
 
-| Area | Tools / Components |
+| Area | Technology |
 |---|---|
-| Microcontroller | ESP32-S3 |
+| MCU | ESP32-S3 |
+| Embedded development | Arduino/C++ |
 | Simulation | Wokwi |
-| Programming | Arduino/C++ |
-| IoT dashboard | Blynk IoT |
-| AI workflow | Edge Impulse, TinyML / embedded AI |
+| IoT dashboard | Blynk |
 | Sensors | DHT22, MQ2, PIR, LDR |
-| Actuators / outputs | Servo motor, AC relay, LCD I2C display, buzzer, LEDs |
-| Documentation | Markdown, PDF report, diagrams and screenshots |
-
----
-
-## Modules
-
-### Bedroom Module
-
-Folder:
-
-```text
-wokwi/bedroom/
-```
-
-The Bedroom module focuses on comfort, privacy and user-centred automation.
-
-Main behaviours:
-
-- Normal, Sleep, Privacy and Eco room modes
-- Standard, Elderly and Child user profiles
-- Adaptive lighting based on indoor and outdoor brightness
-- Servo-controlled blinds for light and privacy management
-- PIR-based occupancy detection
-- Temperature and humidity monitoring
-- AC relay control for thermal comfort
-- Home/Away security state
-- Intruder-alert escalation and authenticated recovery
-
-Example scenarios:
-
-- If the room is dark and motion is detected, the light can turn on automatically.
-- If Privacy mode is active, blinds are prioritised even when natural light is available.
-- If Away mode is active and motion is detected, the system escalates to a security alert.
-- If Child mode is active, deactivation requires controlled user input.
-
----
-
-### Kitchen and Living Room Module
-
-Folder:
-
-```text
-wokwi/kitchen-living-room/
-```
-
-The Kitchen and Living Room module focuses on environmental safety, gas monitoring and emergency response.
-
-Main behaviours:
-
-- Normal, Privacy and Eco room modes
-- MQ2-based gas monitoring
-- DHT22 temperature and humidity sensing
-- Gas warning and danger states
-- Emergency response for gas and heat events
-- Buzzer and visual alert outputs
-- Blynk dashboard monitoring
-- Optional Edge Impulse-inspired environmental classification
-
-Example scenarios:
-
-- If gas levels rise slightly, the system classifies the situation as a warning.
-- If gas levels remain high, the system escalates to a danger state.
-- If high gas and high temperature occur together, the system triggers an emergency response.
-- Blynk virtual pins allow the simulated environment to be monitored remotely.
-
----
-
-## Blynk Configuration
-
-The public version of the code uses placeholder credentials:
-
-```cpp
-#define BLYNK_TEMPLATE_ID "YOUR_TEMPLATE_ID"
-#define BLYNK_TEMPLATE_NAME "YOUR_TEMPLATE_NAME"
-#define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
-```
-
-To run the project with Blynk:
-
-1. Create a Blynk account.
-2. Create a new Blynk template.
-3. Copy your template ID, template name and authentication token.
-4. Replace the placeholder values in the relevant sketch.
-5. Run the simulation in Wokwi.
-
-Do not publish real Blynk tokens, Wi-Fi credentials or private API keys in a public repository.
-
-The public report and screenshots may include dashboard views or virtual-pin mapping where they help explain the system architecture. These materials are only included when they do not expose private tokens, credentials or personal data.
-
----
-
-## Security and Demo Authentication Notes
-
-The project includes child-mode protection, Away-to-Home authentication and intruder-alert clearing logic.
-
-Any authentication PINs, secret words or command values visible in the public code are **demonstration values for simulation purposes only**. They should not be reused in a real deployment.
-
-For a real system, these values should be moved to:
-
-- secure configuration files,
-- environment variables,
-- a private secrets manager,
-- or a hardware-backed secure storage solution.
-
-Only placeholders should remain in a public repository.
-
----
-
-## Edge Impulse / TinyML Workflow
-
-The Kitchen and Living Room module includes an optional Edge Impulse integration point.
-
-By default, the public version keeps the Edge Impulse runtime disabled:
-
-```cpp
-#define USE_EDGE_IMPULSE_RUNTIME 0
-```
-
-This allows the Wokwi simulation and rule-based safety logic to remain understandable and runnable even when the exported Edge Impulse library is not installed.
-
-To enable the exported Edge Impulse inference library:
-
-1. Download or extract the exported Edge Impulse Arduino library.
-2. Add it to the Arduino/Wokwi project.
-3. Change the runtime flag:
-
-```cpp
-#define USE_EDGE_IMPULSE_RUNTIME 1
-```
-
-The exported Edge Impulse package is stored in:
-
-```text
-edge-impulse/edge_impulse_kitchen_living_room_inferencing.zip
-```
-
-Important note:
-
-The current AI workflow should be understood as an **embedded-AI prototype**. The dataset is simulated and rule-labelled, so real-world validation would still be required before using the model in any safety-critical application.
-
----
-
-## Dataset
-
-The environmental training dataset was created for this project using simulated sensor readings from the Kitchen and Living Room module.
-
-Dataset location:
-
-```text
-data/environmental_training_dataset.csv
-```
-
-The dataset contains simulated environmental readings and labels for the following safety states:
-
-- NORMAL
-- COOKING_FUMES
-- GAS_DANGER
-- HEAT_ANOMALY
-- GAS_HEAT_EMERGENCY
-
-The dataset does not contain personal data, private credentials or sensitive information.
-
----
-
-## How to Run the Simulations
-
-### Bedroom
-
-1. Open the Bedroom Wokwi demo:
-
-   [Bedroom Wokwi Demo](https://wokwi.com/projects/465661521735358465)
-
-2. Start the simulation.
-
-3. Use the simulated sensors and Serial Monitor commands to test:
-
-   - room modes,
-   - occupancy,
-   - lighting behaviour,
-   - blind control,
-   - child mode,
-   - Away mode,
-   - intruder-alert recovery.
-
----
-
-### Kitchen/Living Room
-
-1. Open the Kitchen/Living Room Wokwi demo:
-
-   [Kitchen/Living Room Wokwi Demo](https://wokwi.com/projects/465661368262601729)
-
-2. Start the simulation.
-
-3. Adjust the simulated gas, temperature and motion inputs.
-
-4. Observe:
-
-   - gas state classification,
-   - buzzer behaviour,
-   - emergency cooling indicator,
-   - LCD output,
-   - Blynk dashboard values,
-   - Serial Monitor logs.
-
----
-
-## Project Report
-
-The public portfolio report is available at:
-
-```text
-report/aiot_smart_home_public_report.pdf
-```
-
-This version has been sanitised for GitHub and portfolio publication.
-
-Removed or sanitised content includes:
-
-- academic submission-only material,
-- private credentials,
-- personal identifiers,
-- sensitive configuration values,
-- non-public tokens or API keys.
-
-The report keeps the design explanation, architecture, implementation details, evaluation, screenshots and limitations required to understand the project.
-
----
-
-## Skills Demonstrated
-
-This project demonstrates experience with:
-
-- Embedded C++ / Arduino programming
-- ESP32-S3 simulation
-- IoT sensor and actuator logic
-- Wokwi project design
-- Blynk dashboard integration
-- Local rule-based automation
-- Safety-state modelling
-- Edge Impulse / TinyML workflow experimentation
-- Dataset creation for simulated sensor data
-- Technical documentation
-- GitHub portfolio presentation
+| Actuators | Servo, relay, buzzer, LEDs, LCD |
+| TinyML workflow | Edge Impulse / embedded AI experimentation |
+| Validation | Python standard-library checks + GitHub Actions |
 
 ---
 
 ## Limitations
 
-This project is a simulation-based prototype. It should not be treated as a production-ready smart home safety system.
+This repository is deliberately explicit about its limitations:
 
-Current limitations:
-
-- Sensor readings are simulated.
-- The gas detection thresholds are demonstration values.
-- The Edge Impulse dataset is simulated and rule-labelled.
-- The AI workflow demonstrates methodology, not real-world safety validation.
-- Real hardware testing has not been included in this public version.
-- Emergency-response logic would require professional review before deployment.
-- Authentication values in the demo are not suitable for real devices.
-
----
-
-## Future Improvements
-
-Possible next steps:
-
-- Refactor the large Arduino sketches into smaller C++ modules.
-- Add real ESP32-S3 hardware testing.
-- Calibrate MQ2, DHT22, PIR and LDR sensors using real measurements.
-- Replace simulated data with real environmental sensor logs.
-- Add automated build checks for Arduino sketches.
-- Add a more complete Blynk setup guide with virtual-pin mapping.
-- Improve authentication using secure configuration handling.
-- Extend the system with more rooms and shared home-level coordination.
-- Compare rule-based classification with a validated TinyML model trained on real data.
+- sensors are simulated;
+- gas/heat thresholds are demonstration values;
+- the ML dataset is synthetic and rule-labelled;
+- model performance is not independent real-world validation;
+- no physical ESP32-S3 deployment is claimed;
+- Edge Impulse performance screenshots are platform estimates/experiment evidence, not measurements from this public Wokwi runtime;
+- emergency-response behaviour would need professional/domain review before any real deployment;
+- demonstration authentication values are not secure production credentials.
 
 ---
 
-## License
+## Next Steps for a Real Deployment
 
-This repository is provided for educational and portfolio purposes.
+A production-oriented follow-up would require:
 
-See the `LICENSE` file for details.
+1. real ESP32-S3 hardware;
+2. calibrated physical sensors;
+3. independently labelled environmental data;
+4. hardware latency/memory/power measurements;
+5. sensor-fault and drift testing;
+6. false-positive/false-negative evaluation;
+7. secure credential provisioning;
+8. safety/domain review.
+
+---
+
+## Technical Report
+
+The sanitised public report is available at:
+
+[`report/aiot_smart_home_public_report.pdf`](report/aiot_smart_home_public_report.pdf)
+
+It contains the broader design rationale, implementation details, screenshots, evaluation and limitations. The repository README and reproducibility notes should be treated as the current public framing where they clarify the scope of the original academic prototype.
+
+---
+
+## Licence
+
+Original project code and documentation in this repository are provided under the [`LICENSE`](LICENSE) file.
+
+Third-party tools, libraries and generated deployment components remain subject to their own licence terms. No generated Edge Impulse inferencing archive is redistributed in the hardened public source tree.
 
 ---
 
 ## Author
 
 **Alberto Reyes Castro**  
-Physics graduate and MSc Artificial Intelligence Technology student.
+Physics graduate · MSc Artificial Intelligence Technology student
 
-Portfolio focus:
-
-- Artificial Intelligence
-- IoT and AIoT systems
-- Embedded AI / TinyML
-- Scientific computing
-- Data-driven automation
-- Technical documentation
+Portfolio focus: applied AI, embedded/IoT systems, TinyML experimentation, scientific computing and reliable automation.
