@@ -22,28 +22,36 @@
       "id": "ldrInside",
       "top": -505.6,
       "left": -287.2,
-      "attrs": { "lux": "80" }
+      "attrs": {
+        "lux": "80"
+      }
     },
     {
       "type": "wokwi-photoresistor-sensor",
       "id": "ldrOutside",
       "top": -352,
       "left": 1114.4,
-      "attrs": { "lux": "1200" }
+      "attrs": {
+        "lux": "1200"
+      }
     },
     {
       "type": "wokwi-servo",
       "id": "servo1",
       "top": -414.8,
       "left": 38.4,
-      "attrs": { "horn": "straight" }
+      "attrs": {
+        "horn": "straight"
+      }
     },
     {
       "type": "wokwi-led",
       "id": "smartLed",
       "top": -170,
       "left": -260,
-      "attrs": { "color": "yellow" }
+      "attrs": {
+        "color": "yellow"
+      }
     },
     {
       "type": "wokwi-resistor",
@@ -51,21 +59,27 @@
       "top": -130,
       "left": -210,
       "rotate": 90,
-      "attrs": { "value": "220" }
+      "attrs": {
+        "value": "220"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnManual",
       "top": 44.6,
       "left": -422.4,
-      "attrs": { "color": "white" }
+      "attrs": {
+        "color": "white"
+      }
     },
     {
       "type": "wokwi-led",
       "id": "manualLampLed",
       "top": -90,
       "left": 80.6,
-      "attrs": { "color": "white" }
+      "attrs": {
+        "color": "white"
+      }
     },
     {
       "type": "wokwi-resistor",
@@ -73,85 +87,115 @@
       "top": -5,
       "left": 28,
       "rotate": 90,
-      "attrs": { "value": "220" }
+      "attrs": {
+        "value": "220"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnRoom",
       "top": 323,
       "left": -422.4,
-      "attrs": { "color": "blue" }
+      "attrs": {
+        "color": "blue"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnProfile",
       "top": 179,
       "left": -422.4,
-      "attrs": { "color": "yellow" }
+      "attrs": {
+        "color": "yellow"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnHouse",
       "top": 246.2,
       "left": -422.4,
-      "attrs": { "color": "red" }
+      "attrs": {
+        "color": "red"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnChild",
       "top": 111.8,
       "left": -422.4,
-      "attrs": { "color": "green" }
+      "attrs": {
+        "color": "green"
+      }
     },
     {
       "type": "wokwi-lcd1602",
       "id": "lcd1",
       "top": -473.6,
       "left": 495.2,
-      "attrs": { "pins": "i2c" }
+      "attrs": {
+        "pins": "i2c"
+      }
     },
-    { "type": "wokwi-buzzer", "id": "buzz1", "top": 415.2, "left": 97.8, "attrs": {} },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzz1",
+      "top": 415.2,
+      "left": 97.8,
+      "attrs": {}
+    },
     {
       "type": "wokwi-text",
       "id": "text1",
       "top": 345.6,
       "left": -528,
-      "attrs": { "text": "Room Modes \n(Normal/Standard, Sleep, Privacy, ECO)" }
+      "attrs": {
+        "text": "Room Modes \n(Normal/Standard, Sleep, Privacy, ECO)"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text2",
       "top": 192,
       "left": -480,
-      "attrs": { "text": "Profile" }
+      "attrs": {
+        "text": "Profile"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text3",
       "top": 249.6,
       "left": -518.4,
-      "attrs": { "text": "Home/Away" }
+      "attrs": {
+        "text": "Home/Away"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text4",
       "top": 124.8,
       "left": -470.4,
-      "attrs": { "text": "Child" }
+      "attrs": {
+        "text": "Child"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text5",
       "top": 57.6,
       "left": -595.2,
-      "attrs": { "text": "Manual Lamp Button" }
+      "attrs": {
+        "text": "Manual Lamp Button"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text6",
       "top": -316.8,
       "left": 86.4,
-      "attrs": { "text": "Servo (blinds) 1" }
+      "attrs": {
+        "text": "Servo (blinds) 1"
+      }
     },
     {
       "type": "wokwi-text",
@@ -167,116 +211,440 @@
       "id": "text8",
       "top": -115.2,
       "left": 19.2,
-      "attrs": { "text": "Manual Lamp LED 1" }
+      "attrs": {
+        "text": "Manual Lamp LED 1"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text9",
       "top": -192,
       "left": -318,
-      "attrs": { "text": "Ambient Light (Auto)" }
+      "attrs": {
+        "text": "Ambient Light (Auto)"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text10",
       "top": -384,
       "left": 1104,
-      "attrs": { "text": "LDR1 (Outside) (TOUCH TO SIMULATE DAY/TRANSITION/NIGHT)" }
+      "attrs": {
+        "text": "LDR1 (Outside) (TOUCH TO SIMULATE DAY/TRANSITION/NIGHT)"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text11",
       "top": -518.4,
       "left": 576,
-      "attrs": { "text": "LCD Status Panel 1" }
+      "attrs": {
+        "text": "LCD Status Panel 1"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text12",
       "top": 393.6,
       "left": 67.2,
-      "attrs": { "text": "Buzzer / Alert 1" }
+      "attrs": {
+        "text": "Buzzer / Alert 1"
+      }
     },
     {
       "type": "wokwi-dht22",
       "id": "dht1",
       "top": 413.1,
       "left": 349.8,
-      "attrs": { "temperature": "60.7", "humidity": "100" }
+      "attrs": {
+        "temperature": "24",
+        "humidity": "50"
+      }
     },
-    { "type": "wokwi-relay-module", "id": "relay2", "top": -220.6, "left": 595.2, "attrs": {} },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay2",
+      "top": -220.6,
+      "left": 595.2,
+      "attrs": {}
+    },
     {
       "type": "wokwi-text",
       "id": "text13",
       "top": -547.2,
       "left": 864,
-      "attrs": { "text": "PIR motion sensor 1" }
+      "attrs": {
+        "text": "PIR motion sensor 1"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text14",
       "top": -249.6,
       "left": 624,
-      "attrs": { "text": "Relay (AC) 1" }
+      "attrs": {
+        "text": "Relay (AC) 1"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text15",
       "top": 67.2,
       "left": 1104,
-      "attrs": { "text": "ESP32-S3 Board" }
+      "attrs": {
+        "text": "ESP32-S3 Board"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text16",
       "top": 537.6,
       "left": 336,
-      "attrs": { "text": "DHT22 Sensor 1" }
+      "attrs": {
+        "text": "DHT22 Sensor 1"
+      }
     }
   ],
   "connections": [
-    [ "esp:TX", "$serialMonitor:RX", "", [] ],
-    [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "pir1:VCC", "esp:3V3.1", "red", [ "h0" ] ],
-    [ "pir1:GND", "esp:GND.1", "black", [ "v-9.6", "h211.44" ] ],
-    [ "pir1:OUT", "esp:5", "green", [ "v19.2", "h221.16" ] ],
-    [ "ldrInside:VCC", "esp:3V3.1", "red", [ "h0" ] ],
-    [ "ldrInside:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "ldrInside:AO", "esp:4", "green", [ "h0" ] ],
-    [ "ldrOutside:VCC", "esp:3V3.1", "red", [ "h0" ] ],
-    [ "ldrOutside:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "ldrOutside:AO", "esp:6", "green", [ "h0" ] ],
-    [ "esp:2", "rSmart:1", "green", [ "h0" ] ],
-    [ "rSmart:2", "smartLed:A", "green", [ "v0" ] ],
-    [ "smartLed:C", "esp:GND.2", "black", [ "v0" ] ],
-    [ "servo1:PWM", "esp:18", "orange", [ "h0" ] ],
-    [ "servo1:V+", "esp:5V", "red", [ "h0" ] ],
-    [ "servo1:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "btnManual:1.r", "esp:7", "white", [ "h0" ] ],
-    [ "btnManual:2.r", "esp:GND.2", "black", [ "h0" ] ],
-    [ "esp:8", "rManual:1", "green", [ "h0" ] ],
-    [ "rManual:2", "manualLampLed:A", "green", [ "v0" ] ],
-    [ "manualLampLed:C", "esp:GND.2", "black", [ "v0" ] ],
-    [ "btnRoom:1.r", "esp:9", "blue", [ "h0" ] ],
-    [ "btnRoom:2.r", "esp:GND.2", "black", [ "h0" ] ],
-    [ "btnProfile:1.r", "esp:10", "yellow", [ "h0" ] ],
-    [ "btnProfile:2.r", "esp:GND.2", "black", [ "h0" ] ],
-    [ "btnHouse:1.r", "esp:11", "red", [ "h0" ] ],
-    [ "btnHouse:2.r", "esp:GND.2", "black", [ "h0" ] ],
-    [ "btnChild:1.r", "esp:12", "green", [ "h0" ] ],
-    [ "btnChild:2.r", "esp:GND.2", "black", [ "h0" ] ],
-    [ "buzz1:1", "esp:13", "orange", [ "h0" ] ],
-    [ "buzz1:2", "esp:GND.2", "black", [ "h0" ] ],
-    [ "lcd1:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "lcd1:VCC", "esp:5V", "red", [ "h0" ] ],
-    [ "lcd1:SDA", "esp:16", "blue", [ "h0" ] ],
-    [ "lcd1:SCL", "esp:17", "purple", [ "h0" ] ],
-    [ "dht1:VCC", "esp:3V3.1", "red", [ "v-105.6", "h-249.6" ] ],
-    [ "esp:GND.3", "dht1:GND", "black", [ "h0" ] ],
-    [ "dht1:SDA", "esp:15", "green", [ "v0" ] ],
-    [ "relay2:VCC", "esp:3V3.1", "red", [ "h0" ] ],
-    [ "esp:GND.2", "relay2:GND", "black", [ "v0" ] ],
-    [ "esp:14", "relay2:IN", "green", [ "h-134.45", "v-278.4", "h-278.4", "v-144", "h-28.8" ] ]
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "pir1:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pir1:GND",
+      "esp:GND.1",
+      "black",
+      [
+        "v-9.6",
+        "h211.44"
+      ]
+    ],
+    [
+      "pir1:OUT",
+      "esp:5",
+      "green",
+      [
+        "v19.2",
+        "h221.16"
+      ]
+    ],
+    [
+      "ldrInside:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrInside:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrInside:AO",
+      "esp:4",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrOutside:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrOutside:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrOutside:AO",
+      "esp:6",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "esp:2",
+      "rSmart:1",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "rSmart:2",
+      "smartLed:A",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "smartLed:C",
+      "esp:GND.2",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "servo1:PWM",
+      "esp:18",
+      "orange",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "servo1:V+",
+      "esp:5V",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "servo1:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnManual:1.r",
+      "esp:7",
+      "white",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnManual:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "esp:8",
+      "rManual:1",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "rManual:2",
+      "manualLampLed:A",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "manualLampLed:C",
+      "esp:GND.2",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "btnRoom:1.r",
+      "esp:9",
+      "blue",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnRoom:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnProfile:1.r",
+      "esp:10",
+      "yellow",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnProfile:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnHouse:1.r",
+      "esp:11",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnHouse:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnChild:1.r",
+      "esp:12",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnChild:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "buzz1:1",
+      "esp:13",
+      "orange",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "buzz1:2",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:VCC",
+      "esp:5V",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:SDA",
+      "esp:16",
+      "blue",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:SCL",
+      "esp:17",
+      "purple",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "dht1:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "v-105.6",
+        "h-249.6"
+      ]
+    ],
+    [
+      "esp:GND.3",
+      "dht1:GND",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "dht1:SDA",
+      "esp:15",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "relay2:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "esp:GND.2",
+      "relay2:GND",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "esp:14",
+      "relay2:IN",
+      "green",
+      [
+        "h-134.45",
+        "v-278.4",
+        "h-278.4",
+        "v-144",
+        "h-28.8"
+      ]
+    ]
   ],
   "dependencies": {}
 }
