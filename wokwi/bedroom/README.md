@@ -1,95 +1,59 @@
 # Bedroom Module
 
-This folder contains the Wokwi simulation files for the Bedroom module of the AIoT Smart Home system.
+This folder contains the public Wokwi files for the Bedroom ESP32-S3 controller.
 
-The Bedroom module focuses on comfort, privacy, adaptive lighting, profile-based behaviour and Away mode security logic. It is designed as a room-level ESP32-S3 controller with its own sensors, actuators, local rules and Blynk interaction.
+## Scope
 
-## Files
+The module focuses on comfort, privacy, adaptive lighting, profile-sensitive behaviour and Home/Away security logic.
 
-```text
-bedroom/
-├── README.md
-├── sketch.ino
-├── diagram.json
-└── libraries.txt
-```
+Main features:
 
-## Live Simulation
+- ESP32-S3 Wokwi simulation;
+- indoor and outdoor LDR sensing;
+- PIR occupancy tracking;
+- servo blind control;
+- smart ambient light + manual lamp state;
+- DHT22 temperature/humidity monitoring;
+- AC relay simulation;
+- LCD and buzzer feedback;
+- Normal, Sleep, Privacy and Eco modes;
+- Standard, Elderly and Child profiles;
+- Home/Away security and pet-aware escalation.
 
-The Bedroom module can be opened directly in Wokwi:
+## Live simulation
 
 [Open Bedroom Wokwi simulation](https://wokwi.com/projects/465661521735358465)
 
-## Main Features
+## Offline-first public default
 
-- ESP32-S3 based Wokwi simulation
-- Indoor and outdoor light sensing using LDR sensors
-- Adaptive smart ambient lighting
-- Servo-based blind control
-- PIR motion detection
-- Manual lamp state
-- DHT22 temperature and humidity monitoring
-- AC relay simulation
-- LCD I2C feedback
-- Buzzer alerts
-- Blynk dashboard interaction
-- Normal, Sleep, Privacy and Eco room modes
-- Standard, Elderly and Child profile logic
-- Home/Away security state
-- Pet-aware Away mode
-- PIN and secret-word based protected actions
-
-## Behaviour Overview
-
-The Bedroom module combines sensor readings, selected room mode, active user profile and house status to decide how the room should respond.
-
-Examples of behaviour include:
-
-- In Normal mode, the system balances comfort, lighting support and natural light.
-- In Sleep mode, blinds remain closed and lighting behaviour becomes more restrictive.
-- In Privacy mode, blind control prioritises privacy over natural light.
-- In Eco mode, unnecessary lighting and cooling are reduced.
-- In Elderly and Child profiles, timing and support behaviour become more cautious.
-- In Away mode, repeated motion can escalate from suspicious motion to intruder alert.
-
-## Blynk Configuration
-
-The public version of the code uses placeholder Blynk credentials:
+The source contains placeholder Blynk values and keeps cloud connectivity disabled:
 
 ```cpp
 #define BLYNK_TEMPLATE_ID "YOUR_TEMPLATE_ID"
 #define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
+#define ENABLE_BLYNK 0
 ```
 
-Replace these placeholders with your own Blynk credentials before running the dashboard.
+The local simulation therefore starts without waiting for private cloud credentials. To use Blynk, provide your own private credentials and set `ENABLE_BLYNK` to `1`.
 
-The Wokwi Wi-Fi credentials are used only for simulation:
+## Outside brightness
 
-```cpp
-char ssid[] = "Wokwi-GUEST";
-char pass[] = "";
-```
+The physical Wokwi outdoor LDR controls outside brightness by default. If Blynk is enabled, virtual pin V3 can take control; moving the physical outdoor LDR again returns control to Wokwi.
 
-## Security Notes
+This matches the labels visible in the public diagram and makes the demo usable without Blynk.
 
-The public version uses demo authentication values for simulation purposes only.
+## Demonstration authentication
 
-```cpp
-const String SYSTEM_PIN = "1234";
-```
+The visible PIN and secret word are simulation values only. They illustrate protected state transitions; they are not production credentials.
 
-These values should not be treated as real security credentials.
+## Run
 
-## Running the Simulation
-
-To run this module:
-
-1. Open the Bedroom Wokwi project.
-2. Make sure `sketch.ino`, `diagram.json` and `libraries.txt` are present.
-3. Replace Blynk placeholders with your own credentials if dashboard connectivity is required.
-4. Start the simulation.
-5. Use the simulated sensors, buttons, Serial Monitor and Blynk dashboard to test the behaviour.
+1. Open the Wokwi project.
+2. Start the simulation.
+3. Move the physical indoor/outdoor light sensors and PIR; use the buttons to change room/profile/house state.
+4. Observe blinds, lighting, AC, LCD, buzzer and Serial Monitor behaviour.
+5. Optionally configure and enable Blynk for dashboard interaction.
 
 ## Limitations
 
-This module is a simulation-based prototype. Real-world deployment would require hardware validation, sensor calibration, electrical safety checks and secure credential management.
+This is a simulation-based prototype. Real deployment would require physical hardware validation, sensor calibration, electrical safety checks and secure credential management.

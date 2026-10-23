@@ -2,7 +2,7 @@ name: Repository quality
 
 on:
   push:
-    branches: [main]
+    branches: [main, hardening-v2-aiot-20261023]
   pull_request:
 
 permissions:
@@ -15,14 +15,14 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-
       - name: Run repository validation
         run: python scripts/validate_repo.py
+      - name: Run deterministic scenario contracts
+        run: python scripts/test_scenarios.py
 
   arduino-compile:
     name: Compile ESP32-S3 sketches
@@ -30,31 +30,44 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-
       - name: Set up Arduino CLI
         uses: arduino/setup-arduino-cli@v2
-
-      - name: Install ESP32 platform
+        with:
+          version: "1.5.1"
+      - name: Install pinned ESP32 platform
         run: |
           arduino-cli config init
           arduino-cli core update-index
-          arduino-cli core install esp32:esp32
-
-      - name: Install Arduino libraries
+          arduino-cli core install esp32:esp32@3.3.12
+      - name: Install pinned Arduino libraries
         run: |
-          arduino-cli lib install "Blynk"
-          arduino-cli lib install "ESP32Servo"
-          arduino-cli lib install "LiquidCrystal I2C"
-          arduino-cli lib install "DHT sensor library"
-
+          arduino-cli lib install "Blynk@1.4.0"
+          arduino-cli lib install "ESP32Servo@3.2.1"
+          arduino-cli lib install "LiquidCrystal_PCF8574@2.3.0"
+          arduino-cli lib install "DHT sensor library@1.4.7"
       - name: Prepare sketches for Arduino CLI
         run: |
           mkdir -p /tmp/aiot-bedroom /tmp/aiot-kitchen
           cp wokwi/bedroom/sketch.ino /tmp/aiot-bedroom/aiot-bedroom.ino
           cp wokwi/kitchen-living-room/sketch.ino /tmp/aiot-kitchen/aiot-kitchen.ino
-
       - name: Compile bedroom module
         run: arduino-cli compile --fqbn esp32:esp32:esp32s3 /tmp/aiot-bedroom
-
       - name: Compile kitchen/living-room module
         run: arduino-cli compile --fqbn esp32:esp32:esp32s3 /tmp/aiot-kitchen
+
+  report:
+    name: Verify public report is reproducible
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install pinned report dependency
+        run: python -m pip install --disable-pip-version-check reportlab==5.1.0
+      - name: Rebuild public report
+        run: python scripts/build_public_report.py
+      - name: Verify committed report is current
+        run: git diff --exit-code -- report/aiot_smart_home_public_report.pdf

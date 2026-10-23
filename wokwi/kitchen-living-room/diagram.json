@@ -22,35 +22,45 @@
       "id": "ldrInside",
       "top": -380.8,
       "left": 576.8,
-      "attrs": { "lux": "0.1" }
+      "attrs": {
+        "lux": "0.1"
+      }
     },
     {
       "type": "wokwi-photoresistor-sensor",
       "id": "ldrOutside",
       "top": -524.8,
       "left": -460,
-      "attrs": { "lux": "1200" }
+      "attrs": {
+        "lux": "1200"
+      }
     },
     {
       "type": "wokwi-servo",
       "id": "servo1",
       "top": -405.2,
       "left": 336,
-      "attrs": { "horn": "straight" }
+      "attrs": {
+        "horn": "straight"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnManual",
       "top": 486.2,
       "left": 700.8,
-      "attrs": { "color": "white" }
+      "attrs": {
+        "color": "white"
+      }
     },
     {
       "type": "wokwi-led",
       "id": "mainLampLed",
       "top": -109.2,
       "left": 675.8,
-      "attrs": { "color": "white" }
+      "attrs": {
+        "color": "white"
+      }
     },
     {
       "type": "wokwi-resistor",
@@ -58,59 +68,94 @@
       "top": 14.4,
       "left": 671.45,
       "rotate": 90,
-      "attrs": { "value": "220" }
+      "attrs": {
+        "value": "220"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnRoom",
       "top": 486.2,
       "left": 1056,
-      "attrs": { "color": "blue" }
+      "attrs": {
+        "color": "blue"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnProfile",
       "top": 486.2,
       "left": 873.6,
-      "attrs": { "color": "yellow" }
+      "attrs": {
+        "color": "yellow"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnHouse",
       "top": 486.2,
       "left": 960,
-      "attrs": { "color": "red" }
+      "attrs": {
+        "color": "red"
+      }
     },
     {
       "type": "wokwi-pushbutton",
       "id": "btnChild",
       "top": 486.2,
       "left": 796.8,
-      "attrs": { "color": "green" }
+      "attrs": {
+        "color": "green"
+      }
     },
     {
       "type": "wokwi-lcd1602",
       "id": "lcd1",
       "top": -521.6,
       "left": -90.4,
-      "attrs": { "pins": "i2c" }
+      "attrs": {
+        "pins": "i2c"
+      }
     },
-    { "type": "wokwi-buzzer", "id": "buzz1", "top": 453.6, "left": 597, "attrs": {} },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzz1",
+      "top": 453.6,
+      "left": 597,
+      "attrs": {}
+    },
     {
       "type": "wokwi-dht22",
       "id": "dht1",
       "top": 432.3,
       "left": 493.8,
-      "attrs": { "temperature": "72.4" }
+      "attrs": {
+        "temperature": "24",
+        "humidity": "50"
+      }
     },
-    { "type": "wokwi-relay-module", "id": "relay1", "top": -355, "left": -9.6, "attrs": {} },
-    { "type": "wokwi-gas-sensor", "id": "gas2", "top": 482.7, "left": 151, "attrs": {} },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay1",
+      "top": -355,
+      "left": -9.6,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-gas-sensor",
+      "id": "gas2",
+      "top": 482.7,
+      "left": 151,
+      "attrs": {}
+    },
     {
       "type": "wokwi-led",
       "id": "sprinklerLed",
       "top": 409.2,
       "left": 13.4,
-      "attrs": { "color": "blue" }
+      "attrs": {
+        "color": "blue"
+      }
     },
     {
       "type": "wokwi-resistor",
@@ -118,49 +163,63 @@
       "top": 494.4,
       "left": 37.85,
       "rotate": 90,
-      "attrs": { "value": "220" }
+      "attrs": {
+        "value": "220"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text2",
       "top": 556.8,
       "left": 652.8,
-      "attrs": { "text": "Manual Lamp Button" }
+      "attrs": {
+        "text": "Manual Lamp Button"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text3",
       "top": 556.8,
       "left": 816,
-      "attrs": { "text": "Child" }
+      "attrs": {
+        "text": "Child"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text4",
       "top": 556.8,
       "left": 873.6,
-      "attrs": { "text": "Profile" }
+      "attrs": {
+        "text": "Profile"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text5",
       "top": 556.8,
       "left": 940.8,
-      "attrs": { "text": "Home/Away" }
+      "attrs": {
+        "text": "Home/Away"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text6",
       "top": 547.2,
       "left": 1056,
-      "attrs": { "text": "Room Modes \n(Normal/Standard, Sleep, Privacy, ECO)" }
+      "attrs": {
+        "text": "Room Modes\n(Normal, Privacy, ECO)"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text7",
       "top": 422.4,
       "left": 1142.4,
-      "attrs": { "text": "PIR motion sensor 2" }
+      "attrs": {
+        "text": "PIR motion sensor 2"
+      }
     },
     {
       "type": "wokwi-text",
@@ -176,118 +235,469 @@
       "id": "text8",
       "top": -556.8,
       "left": -585.6,
-      "attrs": { "text": "LDR1 (Outside) (TOUCH TO SIMULATE DAY/TRANSITION/NIGHT)" }
+      "attrs": {
+        "text": "LDR1 (Outside) (TOUCH TO SIMULATE DAY/TRANSITION/NIGHT)"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text9",
       "top": -556.8,
       "left": -9.6,
-      "attrs": { "text": "LCD Status Panel 2" }
+      "attrs": {
+        "text": "LCD Status Panel 2"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text10",
       "top": 441.6,
       "left": 144,
-      "attrs": { "text": "MQ2 Gas Sensor" }
+      "attrs": {
+        "text": "MQ2 Gas Sensor"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text11",
       "top": -288,
       "left": 19.2,
-      "attrs": { "text": "Relay (AC) 2" }
+      "attrs": {
+        "text": "Relay (AC) 2"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text12",
       "top": -307.2,
       "left": 384,
-      "attrs": { "text": "Servo (blinds) 2" }
+      "attrs": {
+        "text": "Servo (blinds) 2"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text13",
       "top": -134.4,
       "left": 624,
-      "attrs": { "text": "Manual Lamp LED 2" }
+      "attrs": {
+        "text": "Manual Lamp LED 2"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text14",
       "top": 48,
       "left": -528,
-      "attrs": { "text": "ESP32-S3 Board" }
+      "attrs": {
+        "text": "ESP32-S3 Board"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text15",
       "top": 422.4,
       "left": 576,
-      "attrs": { "text": "Buzzer / Alert 2" }
+      "attrs": {
+        "text": "Buzzer / Alert 2"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text16",
       "top": 556.8,
       "left": 460.8,
-      "attrs": { "text": "DHT22 Sensor 2" }
+      "attrs": {
+        "text": "DHT22 Sensor 2"
+      }
     },
     {
       "type": "wokwi-text",
       "id": "text17",
       "top": 384,
       "left": -67.2,
-      "attrs": { "text": "Emergency cooling system" }
+      "attrs": {
+        "text": "Emergency cooling system"
+      }
     }
   ],
   "connections": [
-    [ "esp:TX", "$serialMonitor:RX", "", [] ],
-    [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "pir1:VCC", "esp:3V3.1", "red", [ "h0" ] ],
-    [ "pir1:GND", "esp:GND.1", "black", [ "h0" ] ],
-    [ "pir1:OUT", "esp:5", "green", [ "h0" ] ],
-    [ "ldrInside:VCC", "esp:3V3.1", "red", [ "h451.2", "v547.2" ] ],
-    [ "ldrInside:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "ldrInside:AO", "esp:4", "green", [ "h566.4", "v546.5" ] ],
-    [ "ldrOutside:VCC", "esp:3V3.1", "red", [ "h-317.6", "v215.2" ] ],
-    [ "ldrOutside:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "ldrOutside:AO", "esp:6", "green", [ "h-308", "v233.7" ] ],
-    [ "servo1:PWM", "esp:18", "orange", [ "h-403.2", "v249.8" ] ],
-    [ "servo1:V+", "esp:5V", "red", [ "h0" ] ],
-    [ "servo1:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "btnManual:1.r", "esp:7", "white", [ "h0" ] ],
-    [ "btnManual:2.r", "esp:GND.2", "black", [ "h0" ] ],
-    [ "esp:8", "rLamp:1", "yellow", [ "h0" ] ],
-    [ "rLamp:2", "mainLampLed:A", "yellow", [ "v0" ] ],
-    [ "mainLampLed:C", "esp:GND.2", "black", [ "v0" ] ],
-    [ "btnRoom:1.r", "esp:9", "blue", [ "h0" ] ],
-    [ "btnRoom:2.r", "esp:GND.2", "black", [ "h-700.6", "v-547" ] ],
-    [ "btnProfile:1.r", "esp:10", "yellow", [ "h0" ] ],
-    [ "btnProfile:2.r", "esp:GND.2", "black", [ "h-527.8", "v-547" ] ],
-    [ "btnHouse:1.r", "esp:11", "red", [ "h0" ] ],
-    [ "btnHouse:2.r", "esp:GND.2", "black", [ "h-633.4", "v-547" ] ],
-    [ "btnChild:1.r", "esp:12", "green", [ "h0" ] ],
-    [ "btnChild:2.r", "esp:GND.2", "black", [ "h-479.8", "v-547" ] ],
-    [ "buzz1:1", "esp:13", "orange", [ "h0" ] ],
-    [ "buzz1:2", "esp:GND.2", "black", [ "h-182.8", "v-566.4" ] ],
-    [ "relay1:VCC", "esp:3V3.1", "red", [ "h288", "v307.2" ] ],
-    [ "relay1:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "relay1:IN", "esp:14", "green", [ "h345.6", "v470.2" ] ],
-    [ "dht1:VCC", "esp:3V3.1", "red", [ "h0" ] ],
-    [ "dht1:GND", "esp:GND.3", "black", [ "h-134.4", "v-384" ] ],
-    [ "dht1:SDA", "esp:15", "green", [ "h0" ] ],
-    [ "lcd1:GND", "esp:GND.2", "black", [ "h0" ] ],
-    [ "lcd1:VCC", "esp:5V", "red", [ "h412.8", "v643.3" ] ],
-    [ "lcd1:SDA", "esp:16", "blue", [ "h403.2", "v518.6" ] ],
-    [ "lcd1:SCL", "esp:17", "purple", [ "h393.6", "v518.7" ] ],
-    [ "gas2:VCC", "esp:5V", "red", [ "h0" ] ],
-    [ "gas2:GND", "esp:GND.2", "black", [ "h172.8", "v-548" ] ],
-    [ "gas2:AOUT", "esp:1", "green", [ "h182.4", "v-528" ] ],
-    [ "esp:2", "rSprinkler:1", "blue", [ "h441.6", "v489.6" ] ],
-    [ "rSprinkler:2", "sprinklerLed:A", "blue", [ "v0" ] ],
-    [ "sprinklerLed:C", "esp:GND.2", "black", [ "h-124.4", "v-508.8" ] ]
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "pir1:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pir1:GND",
+      "esp:GND.1",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "pir1:OUT",
+      "esp:5",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrInside:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h451.2",
+        "v547.2"
+      ]
+    ],
+    [
+      "ldrInside:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrInside:AO",
+      "esp:4",
+      "green",
+      [
+        "h566.4",
+        "v546.5"
+      ]
+    ],
+    [
+      "ldrOutside:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h-317.6",
+        "v215.2"
+      ]
+    ],
+    [
+      "ldrOutside:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "ldrOutside:AO",
+      "esp:6",
+      "green",
+      [
+        "h-308",
+        "v233.7"
+      ]
+    ],
+    [
+      "servo1:PWM",
+      "esp:18",
+      "orange",
+      [
+        "h-403.2",
+        "v249.8"
+      ]
+    ],
+    [
+      "servo1:V+",
+      "esp:5V",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "servo1:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnManual:1.r",
+      "esp:7",
+      "white",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnManual:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "esp:8",
+      "rLamp:1",
+      "yellow",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "rLamp:2",
+      "mainLampLed:A",
+      "yellow",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "mainLampLed:C",
+      "esp:GND.2",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "btnRoom:1.r",
+      "esp:9",
+      "blue",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnRoom:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h-700.6",
+        "v-547"
+      ]
+    ],
+    [
+      "btnProfile:1.r",
+      "esp:10",
+      "yellow",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnProfile:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h-527.8",
+        "v-547"
+      ]
+    ],
+    [
+      "btnHouse:1.r",
+      "esp:11",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnHouse:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h-633.4",
+        "v-547"
+      ]
+    ],
+    [
+      "btnChild:1.r",
+      "esp:12",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "btnChild:2.r",
+      "esp:GND.2",
+      "black",
+      [
+        "h-479.8",
+        "v-547"
+      ]
+    ],
+    [
+      "buzz1:1",
+      "esp:13",
+      "orange",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "buzz1:2",
+      "esp:GND.2",
+      "black",
+      [
+        "h-182.8",
+        "v-566.4"
+      ]
+    ],
+    [
+      "relay1:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h288",
+        "v307.2"
+      ]
+    ],
+    [
+      "relay1:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "relay1:IN",
+      "esp:14",
+      "green",
+      [
+        "h345.6",
+        "v470.2"
+      ]
+    ],
+    [
+      "dht1:VCC",
+      "esp:3V3.1",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "dht1:GND",
+      "esp:GND.3",
+      "black",
+      [
+        "h-134.4",
+        "v-384"
+      ]
+    ],
+    [
+      "dht1:SDA",
+      "esp:15",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:VCC",
+      "esp:5V",
+      "red",
+      [
+        "h412.8",
+        "v643.3"
+      ]
+    ],
+    [
+      "lcd1:SDA",
+      "esp:16",
+      "blue",
+      [
+        "h403.2",
+        "v518.6"
+      ]
+    ],
+    [
+      "lcd1:SCL",
+      "esp:17",
+      "purple",
+      [
+        "h393.6",
+        "v518.7"
+      ]
+    ],
+    [
+      "gas2:VCC",
+      "esp:5V",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "gas2:GND",
+      "esp:GND.2",
+      "black",
+      [
+        "h172.8",
+        "v-548"
+      ]
+    ],
+    [
+      "gas2:AOUT",
+      "esp:1",
+      "green",
+      [
+        "h182.4",
+        "v-528"
+      ]
+    ],
+    [
+      "esp:2",
+      "rSprinkler:1",
+      "blue",
+      [
+        "h441.6",
+        "v489.6"
+      ]
+    ],
+    [
+      "rSprinkler:2",
+      "sprinklerLed:A",
+      "blue",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "sprinklerLed:C",
+      "esp:GND.2",
+      "black",
+      [
+        "h-124.4",
+        "v-508.8"
+      ]
+    ]
   ],
   "dependencies": {}
 }

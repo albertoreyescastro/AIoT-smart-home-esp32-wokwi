@@ -2,6 +2,9 @@
 #define BLYNK_TEMPLATE_NAME "Kitchen and Living Room"
 #define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
 
+// Public portfolio default: local Wokwi logic must not depend on cloud credentials.
+#define ENABLE_BLYNK 0
+
 #define BLYNK_PRINT Serial
 
 #include <WiFi.h>
@@ -10,7 +13,7 @@
 
 #include <ESP32Servo.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include <LiquidCrystal_PCF8574.h>
 #include <DHT.h>
 
 // Edge Impulse runtime is optional in the public version.
@@ -18,8 +21,11 @@
 // is installed and tested in the simulation/hardware environment.
 #define USE_EDGE_IMPULSE_RUNTIME 0
 
+// If you enable the generated runtime, change this to your own exported header.
+#define EDGE_IMPULSE_INFERENCING_HEADER "your_project_inferencing.h"
+
 #if USE_EDGE_IMPULSE_RUNTIME
-#include <albertoreyes837-project-1_inferencing.h>
+#include EDGE_IMPULSE_INFERENCING_HEADER
 #endif
 
 #include <string.h>
@@ -31,6 +37,15 @@ char ssid[] = "Wokwi-GUEST";
 char pass[] = "";
 
 BlynkTimer timer;
+
+// Compile-time wrapper: avoids cloud writes when Blynk is disabled without
+// introducing a function before the custom enum declarations (important for
+// Arduino's automatic prototype generation).
+#if ENABLE_BLYNK
+#define blynkWriteSafe(pin, value) Blynk.virtualWrite((pin), (value))
+#else
+#define blynkWriteSafe(pin, value) do { (void)(pin); } while (0)
+#endif
 
 // =====================================================
 // KITCHEN / LIVING ROOM MODULE - BLYNK + EDGE IMPULSE
@@ -131,7 +146,7 @@ int blindHalfAngle   = 90;
 int blindOpenAngle   = 180;
 
 // -------------------- LCD / DHT --------------------
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_PCF8574 lcd(0x27);
 DHT dht(DHT_PIN, DHTTYPE);
 
 // -------------------- STATES --------------------
@@ -721,7 +736,6 @@ bool runEnvironmentClassifier(int gasScore, EnvironmentStatus &statusOut, float 
 
 void updateEnvironmentAI(int gasScore) {
   EnvironmentStatus ruleStatus = ruleEnvironmentStatus(gasScore);
-
   if (isMq2WarmingUp() || !dhtValid) {
     currentEnvironmentStatus = ruleStatus;
     lastMlEnvironmentStatus = ENV_UNKNOWN;
@@ -729,96 +743,92 @@ void updateEnvironmentAI(int gasScore) {
     mlConfidence = 0.0;
     return;
   }
-
+#if USE_EDGE_IMPULSE_RUNTIME
   if (millis() - lastMlTime >= mlEvery) {
     lastMlTime = millis();
-
-    if (!USE_EDGE_IMPULSE_RUNTIME) {
-      // Wokwi-safe mode:
-      // Do not call run_classifier() inside the simulator.
-      // The status still follows the same 5-class environmental logic used to train the model.
-      lastMlEnvironmentStatus = ruleStatus;
-      mlValid = (ruleStatus != ENV_UNKNOWN);
-      mlConfidence = mlValid ? 0.99 : 0.0;
-
-      Serial.print("AI environmental status (Wokwi-safe): ");
-      Serial.print(environmentStatusStr(lastMlEnvironmentStatus));
+    EnvironmentStatus predictedStatus;
+    float confidence;
+    mlValid = runEnvironmentClassifier(gasScore, predictedStatus, confidence);
+    mlConfidence = confidence;
+    if (mlValid) {
+      lastMlEnvironmentStatus = predictedStatus;
+      Serial.print("ML environmental status: ");
+      Serial.print(environmentStatusStr(predictedStatus));
       Serial.print(" confidence=");
-      Serial.println(mlConfidence, 3);
+      Serial.println(confidence, 3);
     } else {
-      // Real Edge Impulse inference path.
-      // Use this on real ESP32-S3 hardware if the generated library is stable there.
-      EnvironmentStatus predictedStatus;
-      float confidence;
-
-      mlValid = runEnvironmentClassifier(gasScore, predictedStatus, confidence);
-      mlConfidence = confidence;
-
-      if (mlValid) {
-        lastMlEnvironmentStatus = predictedStatus;
-
-        Serial.print("AI environmental status: ");
-        Serial.print(environmentStatusStr(predictedStatus));
-        Serial.print(" confidence=");
-        Serial.println(confidence, 3);
-      } else {
-        lastMlEnvironmentStatus = ENV_UNKNOWN;
-        Serial.println("AI environmental status: invalid or low confidence");
-      }
+      lastMlEnvironmentStatus = ENV_UNKNOWN;
+      Serial.println("ML environmental status: invalid or low confidence");
     }
   }
-
-  if (mlValid) {
-    currentEnvironmentStatus = moreSevereEnvironment(ruleStatus, lastMlEnvironmentStatus);
-  } else {
-    currentEnvironmentStatus = ruleStatus;
+  currentEnvironmentStatus = mlValid ? moreSevereEnvironment(ruleStatus, lastMlEnvironmentStatus) : ruleStatus;
+#else
+  currentEnvironmentStatus = ruleStatus;
+  lastMlEnvironmentStatus = ENV_UNKNOWN;
+  mlValid = false;
+  mlConfidence = 0.0;
+  if (millis() - lastMlTime >= mlEvery) {
+    lastMlTime = millis();
+    Serial.print("ML runtime disabled; environmental status is rule-derived: ");
+    Serial.println(environmentStatusStr(ruleStatus));
   }
+#endif
 }
 
 // =====================================================
 // BLYNK SEND DATA
 // =====================================================
 void sendToBlynk() {
-  Blynk.virtualWrite(V0, currentTempC);
-  Blynk.virtualWrite(V1, currentHumidity);
+  blynkWriteSafe(V0, currentTempC);
+  blynkWriteSafe(V1, currentHumidity);
 
-  Blynk.virtualWrite(V2, blynkInsideScore);
+  blynkWriteSafe(V2, blynkInsideScore);
 
   // V3 is not written here.
   // V3 can be used to override outside brightness from Blynk,
   // but the physical Wokwi outside LDR can also take control again.
 
-  Blynk.virtualWrite(V4, blynkGasScore);
-  Blynk.virtualWrite(V5, blynkPirRaw);
-  Blynk.virtualWrite(V6, blynkPresence ? 1 : 0);
+  blynkWriteSafe(V4, blynkGasScore);
+  blynkWriteSafe(V5, blynkPirRaw);
+  blynkWriteSafe(V6, blynkPresence ? 1 : 0);
 
-  Blynk.virtualWrite(V7, blindStateStr(currentBlindState));
-  Blynk.virtualWrite(V8, manualLampOn ? "ON" : "OFF");
-  Blynk.virtualWrite(V9, acStateStr(currentACState));
-  Blynk.virtualWrite(V10, modeStr(currentMode));
-  Blynk.virtualWrite(V11, effectiveProfileStr());
-  Blynk.virtualWrite(V12, houseStr(currentHouseStatus));
-  Blynk.virtualWrite(V13, activeAlertText());
+  blynkWriteSafe(V7, blindStateStr(currentBlindState));
+  blynkWriteSafe(V8, manualLampOn ? "ON" : "OFF");
+  blynkWriteSafe(V9, acStateStr(currentACState));
+  blynkWriteSafe(V10, modeStr(currentMode));
+  blynkWriteSafe(V11, effectiveProfileStr());
+  blynkWriteSafe(V12, houseStr(currentHouseStatus));
+  blynkWriteSafe(V13, activeAlertText());
 
   if (isMq2WarmingUp()) {
-    Blynk.virtualWrite(V14, "WARMING");
+    blynkWriteSafe(V14, "WARMING");
   } else {
-    Blynk.virtualWrite(V14, gasStatusStr(currentGasStatus));
+    blynkWriteSafe(V14, gasStatusStr(currentGasStatus));
   }
 
-  Blynk.virtualWrite(V15, emergencyCoolingActive() ? "ON" : "OFF");
-  Blynk.virtualWrite(V16, thermalStateStr(blynkThermalState));
-  Blynk.virtualWrite(V17, insideStateStr(blynkInsideState));
-  Blynk.virtualWrite(V18, outsideStateStr(blynkOutsideState));
-  Blynk.virtualWrite(V19, presenceLabel(blynkPresence, blynkInsideState));
+  blynkWriteSafe(V15, emergencyCoolingActive() ? "ON" : "OFF");
+  blynkWriteSafe(V16, thermalStateStr(blynkThermalState));
+  blynkWriteSafe(V17, insideStateStr(blynkInsideState));
+  blynkWriteSafe(V18, outsideStateStr(blynkOutsideState));
+  blynkWriteSafe(V19, presenceLabel(blynkPresence, blynkInsideState));
 
-  Blynk.virtualWrite(V27, petAtHome ? "YES" : "NO");
-  Blynk.virtualWrite(V28, awayMotionCount);
+  blynkWriteSafe(V27, petAtHome ? "YES" : "NO");
+  blynkWriteSafe(V28, awayMotionCount);
 
-  // Optional Blynk datastreams for AI status
-  Blynk.virtualWrite(V29, environmentStatusStr(currentEnvironmentStatus));
-  Blynk.virtualWrite(V30, mlConfidence);
-  Blynk.virtualWrite(V31, mlValid ? environmentStatusStr(lastMlEnvironmentStatus) : "INVALID");
+  // Environmental state is always available. ML fields only represent real inference.
+  blynkWriteSafe(V29, environmentStatusStr(currentEnvironmentStatus));
+#if USE_EDGE_IMPULSE_RUNTIME
+  if (mlValid) {
+    blynkWriteSafe(V30, String(mlConfidence, 3));
+    blynkWriteSafe(V31, environmentStatusStr(lastMlEnvironmentStatus));
+  } else {
+    blynkWriteSafe(V30, "INVALID");
+    blynkWriteSafe(V31, "INVALID");
+  }
+#else
+  blynkWriteSafe(V30, "N/A");
+  blynkWriteSafe(V31, "DISABLED");
+#endif
 }
 
 // -------------------- THERMAL HELPERS --------------------
@@ -1054,16 +1064,16 @@ void processRequestEntry(String text) {
       resetAwaySecurity();
       currentRequest = REQ_NONE;
       Serial.println("AWAY mode armed. Pet mode: ON.");
-      Blynk.virtualWrite(V24, 1);
-      Blynk.virtualWrite(V25, 1);
+      blynkWriteSafe(V24, 1);
+      blynkWriteSafe(V25, 1);
     } else if (ans == "n") {
       petAtHome = false;
       currentHouseStatus = HOUSE_AWAY;
       resetAwaySecurity();
       currentRequest = REQ_NONE;
       Serial.println("AWAY mode armed. Pet mode: OFF.");
-      Blynk.virtualWrite(V24, 1);
-      Blynk.virtualWrite(V25, 0);
+      blynkWriteSafe(V24, 1);
+      blynkWriteSafe(V25, 0);
     } else {
       Serial.println("Invalid answer. Please type y or n.");
     }
@@ -1081,8 +1091,8 @@ void processRequestEntry(String text) {
       currentRequest = REQ_NONE;
       Serial.println("Correct secret word. INTRUDER ALERT cleared.");
       Serial.println("System returned to HOME mode.");
-      Blynk.virtualWrite(V24, 0);
-      Blynk.virtualWrite(V25, 0);
+      blynkWriteSafe(V24, 0);
+      blynkWriteSafe(V25, 0);
     } else {
       Serial.println("Wrong secret word. INTRUDER ALERT remains active.");
     }
@@ -1093,14 +1103,14 @@ void processRequestEntry(String text) {
     if (currentRequest == REQ_CHILD_EXIT_PIN) {
       childMode = false;
       Serial.println("Correct PIN. CHILD mode deactivated.");
-      Blynk.virtualWrite(V23, 0);
+      blynkWriteSafe(V23, 0);
     } else if (currentRequest == REQ_AWAY_DISARM_PIN) {
       currentHouseStatus = HOUSE_HOME;
       petAtHome = false;
       resetAwaySecurity();
       Serial.println("Correct PIN. House disarmed -> HOME.");
-      Blynk.virtualWrite(V24, 0);
-      Blynk.virtualWrite(V25, 0);
+      blynkWriteSafe(V24, 0);
+      blynkWriteSafe(V25, 0);
     }
 
     currentRequest = REQ_NONE;
@@ -1144,7 +1154,9 @@ bool blynkControlsBlocked() {
 }
 
 BLYNK_CONNECTED() {
+#if ENABLE_BLYNK
   Blynk.syncVirtual(V3);
+#endif
 }
 
 BLYNK_WRITE(V3) {
@@ -1229,7 +1241,7 @@ BLYNK_WRITE(V24) {
     if (currentHouseStatus == HOUSE_HOME) {
       if (childMode) {
         Serial.println("AWAY mode cannot be activated while CHILD mode is ON.");
-        Blynk.virtualWrite(V24, 0);
+        blynkWriteSafe(V24, 0);
         return;
       }
 
@@ -1257,8 +1269,8 @@ BLYNK_WRITE(V25) {
     resetAwaySecurity();
     currentRequest = REQ_NONE;
 
-    Blynk.virtualWrite(V24, 1);
-    Blynk.virtualWrite(V25, petAtHome ? 1 : 0);
+    blynkWriteSafe(V24, 1);
+    blynkWriteSafe(V25, petAtHome ? 1 : 0);
 
     Serial.print("AWAY mode armed from Blynk. Pet mode: ");
     Serial.println(petAtHome ? "ON." : "OFF.");
@@ -1271,7 +1283,7 @@ BLYNK_WRITE(V26) {
 
   if (text.length() > 0) {
     processRequestEntry(text);
-    Blynk.virtualWrite(V26, "");
+    blynkWriteSafe(V26, "");
   }
 }
 
@@ -1609,17 +1621,22 @@ void printStatus(
   Serial.print("Gas status: ");
   Serial.println(gasStatusStr(currentGasStatus));
 
-  Serial.print("AI/environment status: ");
+  Serial.print("Environmental status: ");
   Serial.println(environmentStatusStr(currentEnvironmentStatus));
 
+#if USE_EDGE_IMPULSE_RUNTIME
   Serial.print("Last ML prediction: ");
-  Serial.println(environmentStatusStr(lastMlEnvironmentStatus));
-
+  Serial.println(mlValid ? environmentStatusStr(lastMlEnvironmentStatus) : "INVALID");
   Serial.print("ML valid: ");
   Serial.println(mlValid ? "YES" : "NO");
-
   Serial.print("ML confidence: ");
-  Serial.println(mlConfidence, 3);
+  if (mlValid) Serial.println(mlConfidence, 3);
+  else Serial.println("INVALID");
+#else
+  Serial.println("Last ML prediction: DISABLED");
+  Serial.println("ML valid: NO (runtime disabled)");
+  Serial.println("ML confidence: N/A");
+#endif
 
   Serial.print("Emergency cooling threshold: ");
   Serial.print(emergencyCoolingTempC, 1);
@@ -1666,8 +1683,12 @@ void printStatus(
 void setup() {
   Serial.begin(115200);
 
+#if ENABLE_BLYNK
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   timer.setInterval(3000L, sendToBlynk);
+#else
+  Serial.println("Blynk disabled (public default); local Wokwi logic remains active.");
+#endif
 
   systemStartTime = millis();
 
@@ -1694,8 +1715,8 @@ void setup() {
   analogSetPinAttenuation(MQ2_PIN, ADC_11db);
 
   Wire.begin(LCD_SDA_PIN, LCD_SCL_PIN);
-  lcd.init();
-  lcd.backlight();
+  lcd.begin(16, 2, Wire);
+  lcd.setBacklight(255);
   lcd.clear();
 
   dht.begin();
@@ -1708,9 +1729,11 @@ void setup() {
   digitalWrite(BUZZER_PIN, LOW);
   digitalWrite(SPRINKLER_LED_PIN, LOW);
 
-  lcdPrint2("Kitchen/Living", "AI Starting...");
+  lcdPrint2("Kitchen/Living", "Starting...");
 
-  Serial.println("Kitchen / Living Room Module Started - Blynk + Edge Impulse Version");
+  Serial.println("Kitchen / Living Room Module Started");
+  Serial.println(ENABLE_BLYNK ? "Blynk enabled." : "Blynk disabled (public default).");
+  Serial.println(USE_EDGE_IMPULSE_RUNTIME ? "Edge Impulse runtime enabled." : "Edge Impulse runtime disabled; rules are authoritative.");
   Serial.println("Outside brightness can be controlled by:");
   Serial.println("- Wokwi outside LDR");
   Serial.println("- Blynk V3 slider");
@@ -1718,7 +1741,7 @@ void setup() {
   Serial.println("0-119 NIGHT | 120-499 TRANSITION | 500-1000 DAY");
   Serial.println("V2 is inside brightness read-only.");
   Serial.println("V4 is MQ2 gas score read-only.");
-  Serial.println("V29 AI/environment status | V30 ML confidence | V31 raw ML prediction");
+  Serial.println("V29 environmental status | V30 ML confidence | V31 raw ML prediction");
   Serial.println("PIN required to exit CHILD and to disarm AWAY->HOME");
   Serial.println("Secret word required to clear INTRUDER ALERT");
 }
@@ -1727,8 +1750,10 @@ void setup() {
 // LOOP
 // =====================================================
 void loop() {
+#if ENABLE_BLYNK
   Blynk.run();
   timer.run();
+#endif
 
   handleSerialInput();
   updateDHT();
@@ -1808,7 +1833,7 @@ void loop() {
   // Kept as deterministic safety fallback.
   updateGasStatus(gasScore);
 
-  // Edge Impulse environmental safety classifier.
+  // Deterministic rules are authoritative; optional ML can only add severity when enabled.
   updateEnvironmentAI(gasScore);
 
   OutsideState outsideState = classifyOutside(outsideScore);

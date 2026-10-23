@@ -2,6 +2,9 @@
 #define BLYNK_TEMPLATE_NAME "Bedroom"
 #define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
 
+// Public portfolio default: local Wokwi logic must not depend on cloud credentials.
+#define ENABLE_BLYNK 0
+
 #define BLYNK_PRINT Serial
 
 #include <WiFi.h>
@@ -10,7 +13,7 @@
 
 #include <ESP32Servo.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include <LiquidCrystal_PCF8574.h>
 #include <DHT.h>
 
 // -------------------- WIFI --------------------
@@ -20,6 +23,15 @@ char ssid[] = "Wokwi-GUEST";
 char pass[] = "";
 
 BlynkTimer timer;
+
+// Compile-time wrapper: avoids cloud writes when Blynk is disabled without
+// introducing a function before the custom enum declarations (important for
+// Arduino's automatic prototype generation).
+#if ENABLE_BLYNK
+#define blynkWriteSafe(pin, value) Blynk.virtualWrite((pin), (value))
+#else
+#define blynkWriteSafe(pin, value) do { (void)(pin); } while (0)
+#endif
 
 // =====================================================
 // BEDROOM - FIRST MODULE
@@ -78,7 +90,7 @@ int blindHalfAngle   = 90;
 int blindOpenAngle   = 180;
 
 // -------------------- LCD --------------------
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_PCF8574 lcd(0x27);
 
 // -------------------- DHT --------------------
 DHT dht(DHT_PIN, DHTTYPE);
@@ -134,6 +146,11 @@ enum BaseProfile {
 enum HouseStatus {
   HOUSE_HOME,
   HOUSE_AWAY
+};
+
+enum OutsideSource {
+  OUTSIDE_SRC_WOKWI,
+  OUTSIDE_SRC_BLYNK
 };
 
 enum RequestState {
@@ -209,6 +226,7 @@ ACState currentACState = AC_OFF;
 
 // Auth system
 String serialBuffer = "";
+const unsigned int SERIAL_BUFFER_MAX = 24;
 const String SYSTEM_PIN  = "1234";        // Demo PIN for simulation
 const String SECRET_WORD = "OKAY";        // Demo secret word for simulation
 int wrongPinAttempts = 0;
@@ -223,6 +241,11 @@ InsideState blynkInsideState = INSIDE_DARK;
 OutsideState blynkOutsideState = OUTSIDE_NIGHT;
 ThermalState blynkThermalState = THERMAL_COMFORT;
 
+OutsideSource currentOutsideSource = OUTSIDE_SRC_WOKWI;
+int lastPhysicalOutsideScore = -1;
+const int outsideChangeThreshold = 20;
+bool blynkOutsideInitialized = false;
+
 // =====================================================
 // HELPERS
 // =====================================================
@@ -230,6 +253,15 @@ int rawToBrightnessScore(int raw) {
   raw = constrain(raw, 0, 4095);
   int inverted = 4095 - raw;
   return map(inverted, 0, 4095, 0, 1000);
+}
+
+int getUnifiedOutsideScore(int rawOutside) {
+  int physicalOutsideScore = rawToBrightnessScore(rawOutside);
+  if (lastPhysicalOutsideScore < 0) lastPhysicalOutsideScore = physicalOutsideScore;
+  if (abs(physicalOutsideScore - lastPhysicalOutsideScore) > outsideChangeThreshold) currentOutsideSource = OUTSIDE_SRC_WOKWI;
+  lastPhysicalOutsideScore = physicalOutsideScore;
+  if (currentOutsideSource == OUTSIDE_SRC_BLYNK) return constrain(blynkOutsideScore, 0, 1000);
+  return physicalOutsideScore;
 }
 
 InsideState classifyInside(int score) {
@@ -375,31 +407,31 @@ int getIntruderThreshold() {
 // BLYNK SEND DATA
 // =====================================================
 void sendToBlynk() {
-  Blynk.virtualWrite(V0, currentTempC);
-  Blynk.virtualWrite(V1, currentHumidity);
+  blynkWriteSafe(V0, currentTempC);
+  blynkWriteSafe(V1, currentHumidity);
 
-  Blynk.virtualWrite(V2, blynkInsideScore);
+  blynkWriteSafe(V2, blynkInsideScore);
 
   // V3 is NOT written here.
   // V3 is the outside brightness slider from Blynk to ESP32.
 
-  Blynk.virtualWrite(V4, blynkPirRaw);
-  Blynk.virtualWrite(V5, blynkPresence ? 1 : 0);
+  blynkWriteSafe(V4, blynkPirRaw);
+  blynkWriteSafe(V5, blynkPresence ? 1 : 0);
 
-  Blynk.virtualWrite(V6, blindStateStr(currentBlindState));
-  Blynk.virtualWrite(V7, lightStateStr(currentSmartLightState));
-  Blynk.virtualWrite(V8, acStateStr(currentACState));
-  Blynk.virtualWrite(V9, modeStr(currentMode));
-  Blynk.virtualWrite(V10, effectiveProfileStr());
-  Blynk.virtualWrite(V11, houseStr(currentHouseStatus));
-  Blynk.virtualWrite(V12, activeAlertText());
-  Blynk.virtualWrite(V13, petAtHome ? "YES" : "NO");
-  Blynk.virtualWrite(V14, awayMotionCount);
-  Blynk.virtualWrite(V15, manualLampOn ? "ON" : "OFF");
-  Blynk.virtualWrite(V16, thermalStateStr(blynkThermalState));
-  Blynk.virtualWrite(V17, insideStateStr(blynkInsideState));
-  Blynk.virtualWrite(V18, outsideStateStr(blynkOutsideState));
-  Blynk.virtualWrite(V19, presenceLabel(blynkPresence, blynkInsideState));
+  blynkWriteSafe(V6, blindStateStr(currentBlindState));
+  blynkWriteSafe(V7, lightStateStr(currentSmartLightState));
+  blynkWriteSafe(V8, acStateStr(currentACState));
+  blynkWriteSafe(V9, modeStr(currentMode));
+  blynkWriteSafe(V10, effectiveProfileStr());
+  blynkWriteSafe(V11, houseStr(currentHouseStatus));
+  blynkWriteSafe(V12, activeAlertText());
+  blynkWriteSafe(V13, petAtHome ? "YES" : "NO");
+  blynkWriteSafe(V14, awayMotionCount);
+  blynkWriteSafe(V15, manualLampOn ? "ON" : "OFF");
+  blynkWriteSafe(V16, thermalStateStr(blynkThermalState));
+  blynkWriteSafe(V17, insideStateStr(blynkInsideState));
+  blynkWriteSafe(V18, outsideStateStr(blynkOutsideState));
+  blynkWriteSafe(V19, presenceLabel(blynkPresence, blynkInsideState));
 }
 
 // -------------------- THERMAL HELPERS --------------------
@@ -610,7 +642,9 @@ void handleSerialInput() {
         serialBuffer = "";
       }
     } else {
-      serialBuffer += c;
+      if (serialBuffer.length() < SERIAL_BUFFER_MAX) {
+        serialBuffer += c;
+      }
     }
   }
 }
@@ -623,11 +657,22 @@ bool blynkControlsBlocked() {
 }
 
 BLYNK_CONNECTED() {
+#if ENABLE_BLYNK
   Blynk.syncVirtual(V3);
+#endif
 }
 
 BLYNK_WRITE(V3) {
   blynkOutsideScore = constrain(param.asInt(), 0, 1000);
+  if (!blynkOutsideInitialized) {
+    blynkOutsideInitialized = true;
+    Serial.print("Blynk V3 synced (cached only): ");
+    Serial.println(blynkOutsideScore);
+    return;
+  }
+  currentOutsideSource = OUTSIDE_SRC_BLYNK;
+  Serial.print("Outside brightness set from Blynk V3: ");
+  Serial.println(blynkOutsideScore);
 }
 
 BLYNK_WRITE(V20) {
@@ -734,7 +779,7 @@ BLYNK_WRITE(V26) {
 
   if (text.length() > 0) {
     processRequestEntry(text);
-    Blynk.virtualWrite(V26, "");
+    blynkWriteSafe(V26, "");
   }
 }
 
@@ -935,8 +980,6 @@ void updateLCD(
   if (millis() - lastLcdTime < lcdEvery) return;
   lastLcdTime = millis();
 
-  lcd.clear();
-
   if (intruderAlert) {
     lcd.setCursor(0, 0);
     lcd.print(pad16("INTRUDER ALERT"));
@@ -1058,10 +1101,12 @@ void printStatus(
   Serial.print(" | inside effective brightness score: ");
   Serial.println(insideScore);
 
-  Serial.print("LDR1 outside raw debug: ");
+  Serial.print("LDR1 outside raw: ");
   Serial.print(rawOutside);
-  Serial.print(" | outside Blynk simulated score: ");
-  Serial.println(outsideScore);
+  Serial.print(" | active outside score: ");
+  Serial.print(outsideScore);
+  Serial.print(" | source: ");
+  Serial.println(currentOutsideSource == OUTSIDE_SRC_BLYNK ? "BLYNK_V3" : "WOKWI_LDR");
 
   Serial.print("Inside state: ");
   Serial.println(insideStateStr(insideState));
@@ -1117,8 +1162,12 @@ void printStatus(
 void setup() {
   Serial.begin(115200);
 
+#if ENABLE_BLYNK
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   timer.setInterval(3000L, sendToBlynk);
+#else
+  Serial.println("Blynk disabled (public default); local Wokwi logic remains active.");
+#endif
 
   pinMode(PIR_PIN, INPUT);
   pinMode(MANUAL_BUTTON_PIN, INPUT_PULLUP);
@@ -1140,8 +1189,8 @@ void setup() {
   }
 
   Wire.begin(LCD_SDA_PIN, LCD_SCL_PIN);
-  lcd.init();
-  lcd.backlight();
+  lcd.begin(16, 2, Wire);
+  lcd.setBacklight(255);
 
   dht.begin();
 
@@ -1159,7 +1208,7 @@ void setup() {
   lcd.print("Starting...");
 
   Serial.println("Bedroom First Module Started");
-  Serial.println("Blynk connected.");
+  Serial.println(ENABLE_BLYNK ? "Blynk enabled." : "Blynk disabled (public default).");
   Serial.println("V3 controls outside brightness simulation.");
   Serial.println("0-119 NIGHT | 120-499 TRANSITION | 500-1000 DAY");
 }
@@ -1168,8 +1217,10 @@ void setup() {
 // LOOP
 // =====================================================
 void loop() {
+#if ENABLE_BLYNK
   Blynk.run();
   timer.run();
+#endif
 
   handleSerialInput();
   updateDHT();
@@ -1229,10 +1280,9 @@ void loop() {
 
   int insideScoreBase = rawToBrightnessScore(rawInside);
 
-  // IMPORTANT:
-  // Outside brightness is controlled by Blynk slider V3.
-  // The real outside LDR raw value is only kept for Serial debug.
-  int outsideScore = constrain(blynkOutsideScore, 0, 1000);
+  // Outside brightness is physical-Wokwi first. If Blynk is enabled,
+  // V3 may take control until the physical outside LDR moves again.
+  int outsideScore = getUnifiedOutsideScore(rawOutside);
 
   if (manualLampOn) {
     insideScoreBase += manualLampBoost;

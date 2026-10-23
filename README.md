@@ -5,7 +5,7 @@
 <h1 align="center">AIoT Smart Home ESP32-S3</h1>
 
 <p align="center">
-  Simulation-based ESP32-S3 smart-home prototype combining Wokwi, Blynk, deterministic automation and a transparent TinyML experimentation path.
+  Simulation-based ESP32-S3 smart-home prototype combining Wokwi, deterministic room automation, optional Blynk monitoring and a transparent TinyML experimentation path.
 </p>
 
 <p align="center">
@@ -25,14 +25,32 @@ It demonstrates:
 
 - embedded Arduino/C++ programming;
 - sensor/actuator orchestration in Wokwi;
-- local comfort, privacy, security and environmental-safety logic;
-- Blynk dashboard integration;
+- room-specific comfort, privacy, security and environmental-safety logic;
+- optional Blynk dashboard integration;
 - a synthetic environmental dataset;
 - an Edge Impulse / TinyML experimentation workflow;
-- explicit separation between deterministic safety behaviour and ML experimentation;
-- reproducibility checks and CI for the public repository.
+- explicit separation between deterministic safety behaviour and optional ML inference;
+- reproducibility checks, scenario-contract tests and ESP32-S3 CI compilation.
 
 The project is an academic/portfolio prototype. It is **not a production safety system**, and the TinyML results are not presented as real-world hazard-detection validation.
+
+### Public defaults are offline-first
+
+Both sketches keep Blynk disabled by default:
+
+```cpp
+#define ENABLE_BLYNK 0
+```
+
+The Kitchen/Living Room sketch also keeps the generated Edge Impulse runtime disabled by default:
+
+```cpp
+#define USE_EDGE_IMPULSE_RUNTIME 0
+```
+
+A public clone can therefore run the local Wokwi logic without private cloud credentials or a generated third-party ML package.
+
+When ML runtime is disabled, the environmental state is **rule-derived**. The code reports ML confidence as `N/A` and the raw ML prediction as `DISABLED`; it does not fabricate a prediction or confidence value.
 
 ---
 
@@ -42,19 +60,19 @@ The project is an academic/portfolio prototype. It is **not a production safety 
 |---|---|
 | Embedded systems | Two ESP32-S3 Arduino sketches with room-level state/control logic |
 | IoT simulation | Public Wokwi demos for Bedroom and Kitchen/Living Room modules |
-| Cloud/dashboard integration | Blynk virtual-pin monitoring and interaction |
+| Cloud/dashboard integration | Optional Blynk virtual-pin monitoring and interaction |
 | Safety-state modelling | Gas, heat, occupancy and escalation logic with deterministic fallback |
-| TinyML workflow | Synthetic dataset, Edge Impulse training/test evidence and optional inference integration point |
-| Reproducibility | Dataset/rule validator plus GitHub Actions quality checks |
-| Documentation | Architecture visuals, module notes and sanitised technical report |
+| TinyML workflow | Synthetic dataset, historical Edge Impulse training/test evidence and optional inference integration |
+| Reproducibility | Dataset/rule validator, scenario contracts, pinned CI toolchain and deterministic report build |
+| Documentation | Architecture visuals, module notes, model card and concise public technical report |
 
-### What the ML result does — and does not — show
+### What the ML result does - and does not - show
 
 The environmental dataset is **simulated and rule-labelled**. Labels are generated from demonstration thresholds using the same synthetic variables supplied to the model. Strong classifier performance is therefore expected: it shows that an embedded-ML workflow can learn the designed decision regions, not that the model has independently discovered real household hazards.
 
 Real-world validation would require physical sensors, calibration, independently labelled data, hardware measurements and a safety review.
 
-See [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) for the full evaluation protocol and caveats.
+See [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) and [`edge-impulse/HISTORICAL_MODEL_CARD.md`](edge-impulse/HISTORICAL_MODEL_CARD.md).
 
 ---
 
@@ -63,9 +81,9 @@ See [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) for the full evaluation
 | Component | Link | Purpose |
 |---|---|---|
 | Bedroom | [Open in Wokwi](https://wokwi.com/projects/465661521735358465) | Lighting, blinds, comfort, profiles and Home/Away security |
-| Kitchen/Living Room | [Open in Wokwi](https://wokwi.com/projects/465661368262601729) | Gas/heat monitoring, emergency logic and Blynk interaction |
+| Kitchen/Living Room | [Open in Wokwi](https://wokwi.com/projects/465661368262601729) | Gas/heat monitoring, emergency logic and optional Blynk interaction |
 | 2D/3D house model | [Open Planner 5D](https://planner5d.onelink.me/stDT/wjmc3u8i) | Visual layout of the smart-home concept |
-| Technical report | [Open PDF](report/aiot_smart_home_public_report.pdf) | Design, implementation, evaluation and limitations |
+| Technical report | [Open PDF](report/aiot_smart_home_public_report.pdf) | Current public architecture, evaluation and limitations |
 
 ---
 
@@ -79,7 +97,7 @@ Smart Home Prototype
 │   ├── indoor/outdoor light sensing
 │   ├── DHT22 temperature/humidity
 │   ├── servo-controlled blinds
-│   ├── PWM lighting
+│   ├── PWM ambient + manual lighting
 │   ├── AC relay + LCD
 │   ├── profile/privacy logic
 │   └── Home/Away security state
@@ -88,14 +106,15 @@ Smart Home Prototype
     ├── MQ2 gas input
     ├── DHT22 temperature/humidity
     ├── PIR occupancy
+    ├── indoor/outdoor light sensing
     ├── visual/audible alerts
-    ├── emergency cooling indicator
-    ├── Blynk dashboard
-    ├── deterministic safety rules
+    ├── emergency-cooling indicator
+    ├── optional Blynk dashboard
+    ├── deterministic environmental rules
     └── optional Edge Impulse inference layer
 ```
 
-The deterministic path remains authoritative in the public simulation. The optional ML path is treated as an experiment and never as the sole basis for a safety-critical action.
+The deterministic path remains authoritative in the public simulation. If a real Edge Impulse runtime is explicitly enabled and returns a valid prediction, the code may increase the selected environmental severity but does not suppress a more severe deterministic state.
 
 ---
 
@@ -112,11 +131,12 @@ Main behaviours:
 - PIR-based occupancy tracking;
 - temperature/humidity monitoring;
 - AC relay logic with hysteresis;
-- Home/Away state;
-- suspicious-motion and intruder escalation;
+- Home/Away state and repeated-motion escalation;
 - demonstration-only authentication/recovery flows.
 
-The public sketch uses placeholder Blynk credentials and Wokwi's simulated Wi-Fi network.
+### Outside-light source
+
+The physical Wokwi outdoor LDR is authoritative by default. If Blynk is explicitly enabled, V3 can take control of the outside-light score; moving the physical LDR again returns control to Wokwi.
 
 ---
 
@@ -131,17 +151,16 @@ Main behaviours:
 - gas warning/danger persistence logic;
 - heat anomaly and gas+heat emergency states;
 - buzzer and visual alerts;
-- Blynk dashboard updates;
 - deterministic fallback safety logic;
 - optional Edge Impulse classifier integration.
 
-The public build keeps the generated Edge Impulse runtime disabled by default:
+The public build keeps the generated Edge Impulse runtime disabled by default. In that mode:
 
-```cpp
-#define USE_EDGE_IMPULSE_RUNTIME 0
-```
+- `V29` / environment status reflects deterministic rules;
+- ML confidence is `N/A`;
+- raw ML prediction is `DISABLED`.
 
-This makes the Wokwi simulation runnable and auditable without a proprietary/generated deployment package.
+No generated Edge Impulse inferencing archive is redistributed in the hardened public source tree.
 
 ---
 
@@ -151,28 +170,28 @@ This makes the Wokwi simulation runnable and auditable without a proprietary/gen
 
 [`data/environmental_training_dataset.csv`](data/environmental_training_dataset.csv) contains:
 
-- `gas_score` — simulated MQ2 score, 0–1000;
-- `temperature` — simulated DHT22 temperature in °C;
-- `humidity` — simulated relative humidity in %;
-- `label` — one of five environmental states.
+- `gas_score` - simulated MQ2 score, 0-1000;
+- `temperature` - simulated DHT22 temperature in C;
+- `humidity` - simulated relative humidity in %;
+- `label` - one of five environmental states.
 
 Synthetic labels are generated from demonstration rules:
 
 | Rule | Label |
 |---|---|
-| `gas_score >= 850` and `temperature >= 55°C` | `GAS_HEAT_EMERGENCY` |
+| `gas_score >= 850` and `temperature >= 55 C` | `GAS_HEAT_EMERGENCY` |
 | `gas_score >= 850` | `GAS_DANGER` |
-| `temperature >= 55°C` | `HEAT_ANOMALY` |
+| `temperature >= 55 C` | `HEAT_ANOMALY` |
 | `gas_score >= 420` | `COOKING_FUMES` |
 | otherwise | `NORMAL` |
 
 These are **not calibrated safety thresholds**. Humidity is included as an input feature but does not determine the synthetic ground-truth label in this experiment.
 
-### Model evidence
+### Historical model evidence
 
-The repository retains Edge Impulse training/test screenshots under [`assets/`](assets/) so the experiment remains inspectable.
+The repository retains Edge Impulse training/test screenshots under [`assets/`](assets/) and records the historical configuration/metrics in [`edge-impulse/HISTORICAL_MODEL_CARD.md`](edge-impulse/HISTORICAL_MODEL_CARD.md).
 
-A generated inferencing ZIP is intentionally not redistributed in the hardened public source tree. Generated Edge Impulse deployment packages can include SDK/runtime and third-party material under licence terms separate from this repository's MIT-licensed original code. The reproduction path is documented in [`edge-impulse/README.md`](edge-impulse/README.md).
+The historical run is evidence of the workflow, not a claim of exact bit-for-bit reproducibility. An equivalent experiment can be regenerated, but the complete historical hosted project/export is not stored here.
 
 ---
 
@@ -190,43 +209,32 @@ A generated inferencing ZIP is intentionally not redistributed in the hardened p
 |---|---|
 | <img src="assets/kitchen-wokwi-serial.png" alt="Kitchen and living room Wokwi simulation and Serial Monitor"/> | <img src="assets/intruder-alert-demo.png" alt="Bedroom intruder alert scenario in Wokwi"/> |
 
-### Edge Impulse experiment
+### Historical Edge Impulse experiment
 
 | Test results | Estimated on-device performance |
 |---|---|
-| <img src="assets/edge-impulse-test-results.png" alt="Edge Impulse test results and confusion matrix"/> | <img src="assets/edge-impulse-on-device-performance.png" alt="Edge Impulse estimated on-device performance"/> |
-
-<details>
-<summary>Additional Edge Impulse training screenshot</summary>
-
-<p align="center">
-  <img src="assets/edge-impulse-training-results.png" alt="Edge Impulse training performance" width="70%"/>
-</p>
-
-</details>
+| <img src="assets/edge-impulse-test-results.png" alt="Historical Edge Impulse test results and confusion matrix"/> | <img src="assets/edge-impulse-on-device-performance.png" alt="Historical Edge Impulse estimated on-device performance"/> |
 
 ---
 
 ## Repository Quality Checks
 
-Run locally from the repository root:
+Run locally:
 
 ```bash
 python scripts/validate_repo.py
+python scripts/test_scenarios.py
 ```
 
-The validator checks:
+The validator checks dataset integrity, Wokwi diagrams, public placeholders, token patterns, offline Blynk defaults, ML-disabled semantics, dependency/CI pinning, public documentation and report size/currentness.
 
-- CSV schema and sensor-value ranges;
-- presence of all five classes;
-- every row against the documented synthetic labelling rules;
-- Wokwi diagram JSON integrity;
-- public Blynk placeholders;
-- obvious token/credential patterns in the sketches;
-- Edge Impulse runtime disabled by default;
-- public-surface safety/limitations statements.
+GitHub Actions additionally:
 
-GitHub Actions additionally attempts to compile both ESP32-S3 sketches with the optional Edge Impulse runtime disabled.
+- compile both ESP32-S3 sketches with pinned toolchain/library versions;
+- run deterministic scenario-contract tests;
+- rebuild the public PDF with pinned ReportLab and fail if the committed PDF has drifted.
+
+Pinned versions are visible in [`.github/workflows/quality.yml`](.github/workflows/quality.yml).
 
 ---
 
@@ -237,11 +245,12 @@ The public sketches intentionally contain placeholders:
 ```cpp
 #define BLYNK_TEMPLATE_ID "YOUR_TEMPLATE_ID"
 #define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
+#define ENABLE_BLYNK 0
 ```
 
-`Wokwi-GUEST` is used only as the simulator network.
+`Wokwi-GUEST` is used only as the simulator network. To use Blynk, supply your own private values and explicitly set `ENABLE_BLYNK` to `1`.
 
-Any PINs or secret words visible in the source are **demonstration values**, not credentials suitable for a real deployment. Real secrets should be kept outside source control using an appropriate secrets/configuration mechanism.
+Any PINs or secret words visible in the source are demonstration values, not production credentials.
 
 ---
 
@@ -254,92 +263,50 @@ Any PINs or secret words visible in the source are **demonstration values**, not
 ├── LICENSE
 ├── assets/
 ├── data/
-│   ├── README.md
-│   └── environmental_training_dataset.csv
-├── docs/
-│   └── REPRODUCIBILITY.md
+├── docs/REPRODUCIBILITY.md
 ├── edge-impulse/
-│   └── README.md
+│   ├── README.md
+│   └── HISTORICAL_MODEL_CARD.md
 ├── report/
 │   ├── README.md
 │   └── aiot_smart_home_public_report.pdf
 ├── scripts/
+│   ├── build_public_report.py
+│   ├── test_scenarios.py
 │   └── validate_repo.py
 └── wokwi/
     ├── bedroom/
-    │   ├── README.md
-    │   ├── sketch.ino
-    │   ├── diagram.json
-    │   └── libraries.txt
     └── kitchen-living-room/
-        ├── README.md
-        ├── sketch.ino
-        ├── diagram.json
-        └── libraries.txt
 ```
 
 ---
 
-## Technologies
-
-| Area | Technology |
-|---|---|
-| MCU | ESP32-S3 |
-| Embedded development | Arduino/C++ |
-| Simulation | Wokwi |
-| IoT dashboard | Blynk |
-| Sensors | DHT22, MQ2, PIR, LDR |
-| Actuators | Servo, relay, buzzer, LEDs, LCD |
-| TinyML workflow | Edge Impulse / embedded AI experimentation |
-| Validation | Python standard-library checks + GitHub Actions |
-
----
-
 ## Limitations
-
-This repository is deliberately explicit about its limitations:
 
 - sensors are simulated;
 - gas/heat thresholds are demonstration values;
 - the ML dataset is synthetic and rule-labelled;
 - model performance is not independent real-world validation;
 - no physical ESP32-S3 deployment is claimed;
-- Edge Impulse performance screenshots are platform estimates/experiment evidence, not measurements from this public Wokwi runtime;
-- emergency-response behaviour would need professional/domain review before any real deployment;
+- Edge Impulse performance screenshots are historical platform evidence, not measurements from the current Wokwi runtime;
+- the generated Edge Impulse runtime is disabled by default in the public simulation;
+- Blynk is disabled by default so the demo does not depend on placeholder cloud credentials;
+- emergency-response behaviour would need professional/domain review before real deployment;
 - demonstration authentication values are not secure production credentials.
-
----
-
-## Next Steps for a Real Deployment
-
-A production-oriented follow-up would require:
-
-1. real ESP32-S3 hardware;
-2. calibrated physical sensors;
-3. independently labelled environmental data;
-4. hardware latency/memory/power measurements;
-5. sensor-fault and drift testing;
-6. false-positive/false-negative evaluation;
-7. secure credential provisioning;
-8. safety/domain review.
 
 ---
 
 ## Technical Report
 
-The sanitised public report is available at:
+The current public report is generated deterministically from source and is available at:
 
 [`report/aiot_smart_home_public_report.pdf`](report/aiot_smart_home_public_report.pdf)
-
-It contains the broader design rationale, implementation details, screenshots, evaluation and limitations. The repository README and reproducibility notes should be treated as the current public framing where they clarify the scope of the original academic prototype.
 
 ---
 
 ## Licence
 
-Original project code and documentation in this repository are provided under the [`LICENSE`](LICENSE) file.
-
-Third-party tools, libraries and generated deployment components remain subject to their own licence terms. No generated Edge Impulse inferencing archive is redistributed in the hardened public source tree.
+Original project code and documentation are provided under [`LICENSE`](LICENSE). Third-party tools, libraries and generated deployment components remain subject to their own licence terms.
 
 ---
 

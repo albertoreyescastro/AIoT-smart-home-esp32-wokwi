@@ -1,136 +1,86 @@
 # Kitchen and Living Room Module
 
-This folder contains the Wokwi simulation files for the Kitchen and Living Room module of the AIoT Smart Home system.
+This folder contains the public Wokwi files for the Kitchen/Living Room ESP32-S3 controller.
 
-The Kitchen and Living Room module focuses on environmental safety, gas monitoring, emergency response, Blynk interaction and optional Edge Impulse integration. It is designed as a room-level ESP32-S3 controller with local rule-based safety logic and an AI-inspired environmental classification layer.
+## Scope
 
-## Files
+The module focuses on environmental monitoring, deterministic gas/heat safety logic, emergency response, Home/Away security and an **optional** Edge Impulse inference path.
 
-```text
-kitchen-living-room/
-├── README.md
-├── sketch.ino
-├── diagram.json
-└── libraries.txt
-```
+Main features:
 
-## Live Simulation
+- ESP32-S3 Wokwi simulation;
+- MQ2 gas-score monitoring;
+- DHT22 temperature/humidity sensing;
+- PIR and indoor/outdoor light sensing;
+- servo blind and manual-lamp control;
+- AC relay simulation;
+- buzzer + emergency-cooling indicator;
+- LCD feedback;
+- Normal, Privacy and Eco room modes;
+- Standard, Elderly and Child profiles;
+- deterministic environmental state and gas persistence logic;
+- optional Blynk and Edge Impulse integrations.
 
-The Kitchen and Living Room module can be opened directly in Wokwi:
+## Live simulation
 
 [Open Kitchen and Living Room Wokwi simulation](https://wokwi.com/projects/465661368262601729)
 
-## Main Features
-
-- ESP32-S3 based Wokwi simulation
-- MQ2 gas sensor monitoring
-- DHT22 temperature and humidity sensing
-- PIR motion detection
-- Indoor and outdoor light sensing
-- Servo-based blind control
-- Manual main lamp control
-- AC relay simulation
-- Emergency buzzer alerts
-- Sprinkler or emergency-cooling LED simulation
-- LCD I2C feedback
-- Blynk dashboard interaction
-- Normal, Privacy and Eco room modes
-- Standard, Elderly and Child profile logic
-- Home/Away security state
-- Pet-aware Away mode
-- Hybrid rule-based and AI-inspired environmental safety classification
-- Optional Edge Impulse runtime integration
-
-## Behaviour Overview
-
-The Kitchen and Living Room module monitors environmental conditions and classifies the safety state of the room.
-
-The system can distinguish between:
-
-- Normal conditions
-- Cooking fumes
-- Dangerous gas levels
-- Heat anomaly
-- Combined gas and heat emergency
-
-The module uses staged escalation so that safety responses are not based on a single instant reading. This makes the system more realistic for a domestic kitchen/living room environment, where harmless cooking fumes and dangerous gas-related events may appear similar to a low-cost gas sensor.
-
-## Edge Impulse Integration
-
-The public version keeps the Edge Impulse runtime disabled by default:
+## Offline-first public defaults
 
 ```cpp
+#define ENABLE_BLYNK 0
 #define USE_EDGE_IMPULSE_RUNTIME 0
 ```
 
-This allows the Wokwi simulation to remain understandable and usable even when the exported Edge Impulse library is not installed.
+The local simulation therefore runs without private Blynk credentials or a generated Edge Impulse library.
 
-To enable the exported Edge Impulse inference library, add the library to the project and change:
+### ML-disabled semantics
 
-```cpp
-#define USE_EDGE_IMPULSE_RUNTIME 1
-```
+When `USE_EDGE_IMPULSE_RUNTIME` is `0`:
 
-The exported inference package is stored in the repository under:
+- no classifier runs;
+- environmental status is rule-derived;
+- ML confidence is `N/A`;
+- raw ML prediction is `DISABLED`.
 
-```text
-edge-impulse/
-```
+The project does **not** fabricate a model prediction or confidence value in Wokwi-safe mode.
 
-## Dataset
+## Edge Impulse integration
 
-The environmental dataset used for the classification workflow was created for this project using simulated sensor readings.
+The generated inferencing ZIP is intentionally **not** stored in this public repository. To enable a compatible runtime:
 
-Recommended location:
+1. generate your own Arduino/C++ inferencing library;
+2. add it to the build environment;
+3. change `EDGE_IMPULSE_INFERENCING_HEADER` in `sketch.ino` to your generated header;
+4. set `USE_EDGE_IMPULSE_RUNTIME` to `1`;
+5. compile and validate on the intended target.
 
-```text
-data/environmental_training_dataset.csv
-```
+See [`../../edge-impulse/README.md`](../../edge-impulse/README.md) and [`../../edge-impulse/HISTORICAL_MODEL_CARD.md`](../../edge-impulse/HISTORICAL_MODEL_CARD.md).
 
-The dataset should not include personal data, private credentials or sensitive information.
+## Synthetic dataset
 
-## Blynk Configuration
+The environmental dataset is simulated and rule-labelled. Its five classes are generated from project-specific gas/temperature demonstration boundaries. It is suitable for demonstrating the TinyML workflow, not for validating a production safety model.
 
-The public version of the code uses placeholder Blynk credentials:
+## Blynk
+
+The source contains placeholders and keeps Blynk disabled by default:
 
 ```cpp
 #define BLYNK_TEMPLATE_ID "YOUR_TEMPLATE_ID"
 #define BLYNK_AUTH_TOKEN "YOUR_BLYNK_AUTH_TOKEN"
+#define ENABLE_BLYNK 0
 ```
 
-Replace these placeholders with your own Blynk credentials before running the dashboard.
+Provide private values and explicitly enable the integration if dashboard connectivity is required.
 
-The Wokwi Wi-Fi credentials are used only for simulation:
+## Run
 
-```cpp
-char ssid[] = "Wokwi-GUEST";
-char pass[] = "";
-```
-
-## Safety Notes
-
-This module is a simulation-based prototype. The gas thresholds, emergency logic and AI-inspired classifications are designed for demonstration and portfolio purposes.
-
-For real-world use, the system would require:
-
-- Physical sensor calibration
-- Real hardware testing
-- Electrical safety validation
-- Reliable alarm mechanisms
-- Fail-safe design
-- Secure credential management
-- Validation with real environmental data
-
-## Running the Simulation
-
-To run this module:
-
-1. Open the Kitchen and Living Room Wokwi project.
-2. Make sure `sketch.ino`, `diagram.json` and `libraries.txt` are present.
-3. Replace Blynk placeholders with your own credentials if dashboard connectivity is required.
-4. Start the simulation.
-5. Use the Serial Monitor, Blynk dashboard and simulated sensors to test gas, temperature, humidity, motion and safety responses.
+1. Open the Kitchen/Living Room Wokwi project.
+2. Start the simulation and allow the MQ2 warm-up period to finish.
+3. Change gas, temperature, humidity, light and motion inputs.
+4. Observe deterministic environmental state, alerts, AC/blinds, emergency-cooling indicator, LCD and Serial Monitor.
+5. Optionally configure Blynk or a generated Edge Impulse runtime separately.
 
 ## Limitations
 
-The current dataset is simulated and rule-labelled. The Edge Impulse model should therefore be treated as an initial embedded AI prototype, not as a certified safety system. Deterministic rule-based safety logic remains important as a fallback.
+Gas thresholds, emergency responses and ML evidence are simulation/portfolio constructs. Real deployment would require calibrated sensors, real independently labelled data, physical-hardware testing, fault analysis and safety review.
