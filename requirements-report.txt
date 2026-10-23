@@ -1,1 +1,2 @@
+# Pinned dependency for the deterministic public-report build.
 reportlab==5.1.0
