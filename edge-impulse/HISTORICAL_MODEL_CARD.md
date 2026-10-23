@@ -24,23 +24,19 @@ Classes:
 
 The dataset is simulated and rule-labelled from demonstration gas/temperature boundaries. Humidity is retained as an input feature but does not determine the synthetic ground-truth label. Consequently, the metrics below are workflow evidence rather than independent real-world validation.
 
-## Recorded training configuration
+## Historical training evidence
 
-- Edge Impulse tabular/raw-feature workflow
-- small dense neural-network classifier
-- 3 numerical inputs
-- 5 output classes
-- 100 training cycles
-- learning rate: `0.0005`
-- historical deployment path: quantised int8 / EON Arduino export
+The retained screenshots support an Edge Impulse tabular/raw-feature workflow with a small dense neural-network classifier, 3 numerical inputs and 5 output classes. The exact historical train/validation/test split configuration, random seed and training hyperparameters are not preserved as independently verifiable machine-readable configuration in the public repository, so they are not asserted here.
+
+The historical deployment path was a quantised int8 / EON Arduino export. The generated third-party inferencing package is intentionally not redistributed in the public repository.
 
 ## Recorded platform results
 
 | Metric | Historical evidence |
 |---|---:|
-| Training accuracy | ~93.4% |
+| Validation accuracy | ~93.4% |
 | Held-out test accuracy | ~85.9% |
-| AUC | ~0.99 |
+| Edge Impulse-reported AUC | ~0.99 |
 | Weighted precision | ~0.91 |
 | Weighted recall | ~0.89 |
 | Weighted F1 | ~0.89 |
@@ -48,7 +44,7 @@ The dataset is simulated and rule-labelled from demonstration gas/temperature bo
 | Estimated peak RAM | ~1.4 KB |
 | Estimated flash | ~14.4 KB |
 
-The original screenshots remain under `assets/`.
+The original screenshots remain under `assets/`. These values are historical Edge Impulse platform outputs for a synthetic, rule-labelled demonstration dataset; they are not evidence of real-world hazard-detection validity or measured ESP32-S3 runtime performance.
 
 ## Current public-runtime semantics
 
