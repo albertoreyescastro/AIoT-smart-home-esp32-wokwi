@@ -1,0 +1,32 @@
+name: Apply Blynk helper macro fix
+
+on:
+  push:
+    branches: [hardening-v2-aiot-20261023]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out hardening branch
+        uses: actions/checkout@v7
+        with:
+          ref: hardening-v2-aiot-20261023
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Replace templated helper with compile-time macro
+        run: python scripts/fix_blynk_helper_macro.py
+      - name: Commit source fix and self-cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Fix Arduino prototype generation around Blynk helper"
+          git push origin HEAD:hardening-v2-aiot-20261023
