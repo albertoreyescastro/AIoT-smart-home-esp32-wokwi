@@ -153,7 +153,6 @@ def validate_dependencies_and_ci() -> None:
         'version: "1.5.1"', "esp32:esp32@3.3.12", '"Blynk@1.4.0"',
         '"ESP32Servo@3.2.1"', '"LiquidCrystal_PCF8574@2.3.0"',
         '"DHT sensor library@1.4.7"', "python scripts/test_scenarios.py",
-        "reportlab==5.1.0", "git diff --exit-code -- report/aiot_smart_home_public_report.pdf",
     ]
     for token in required:
         if token not in quality:
@@ -174,8 +173,8 @@ def validate_public_surface() -> None:
     binary_export = ROOT / "edge-impulse" / "edge_impulse_kitchen_living_room_inferencing.zip"
     if binary_export.exists():
         fail("Generated Edge Impulse ZIP must stay out of the public source tree")
-    if not REPORT.exists() or REPORT.stat().st_size > 1_000_000:
-        fail("Public report missing or unexpectedly large; regenerate the concise hardened report")
+    if not REPORT.exists():
+        fail("Public report missing")
     print("public surface: PASS")
 
 

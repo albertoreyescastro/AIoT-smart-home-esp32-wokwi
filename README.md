@@ -63,8 +63,8 @@ When ML runtime is disabled, the environmental state is **rule-derived**. The co
 | Cloud/dashboard integration | Optional Blynk virtual-pin monitoring and interaction |
 | Safety-state modelling | Gas, heat, occupancy and escalation logic with deterministic fallback |
 | TinyML workflow | Synthetic dataset, historical Edge Impulse training/test evidence and optional inference integration |
-| Reproducibility | Dataset/rule validator, scenario contracts, pinned CI toolchain and deterministic report build |
-| Documentation | Architecture visuals, module notes, model card and concise public technical report |
+| Reproducibility | Dataset/rule validator, scenario contracts and pinned CI toolchain |
+| Documentation | Architecture visuals, module notes, model card and professional public technical report |
 
 ### What the ML result does - and does not - show
 
@@ -226,13 +226,12 @@ python scripts/validate_repo.py
 python scripts/test_scenarios.py
 ```
 
-The validator checks dataset integrity, Wokwi diagrams, public placeholders, token patterns, offline Blynk defaults, ML-disabled semantics, dependency/CI pinning, public documentation and report size/currentness.
+The validator checks dataset integrity, Wokwi diagrams, public placeholders, token patterns, offline Blynk defaults, ML-disabled semantics, dependency/CI pinning and public documentation.
 
 GitHub Actions additionally:
 
 - compile both ESP32-S3 sketches with pinned toolchain/library versions;
 - run deterministic scenario-contract tests;
-- rebuild the public PDF with pinned ReportLab and fail if the committed PDF has drifted.
 
 Pinned versions are visible in [`.github/workflows/quality.yml`](.github/workflows/quality.yml).
 
@@ -271,7 +270,6 @@ Any PINs or secret words visible in the source are demonstration values, not pro
 │   ├── README.md
 │   └── aiot_smart_home_public_report.pdf
 ├── scripts/
-│   ├── build_public_report.py
 │   ├── test_scenarios.py
 │   └── validate_repo.py
 └── wokwi/
@@ -298,9 +296,11 @@ Any PINs or secret words visible in the source are demonstration values, not pro
 
 ## Technical Report
 
-The current public report is generated deterministically from source and is available at:
+The professional public report is preserved in its authored layout and is available at:
 
 [`report/aiot_smart_home_public_report.pdf`](report/aiot_smart_home_public_report.pdf)
+
+Future report changes should be made from the original LaTeX source so its formatting, figures and structure are preserved.
 
 ---
 
