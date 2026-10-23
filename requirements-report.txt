@@ -1,2 +1,2 @@
-# Pinned dependency for the deterministic public-report build.
+# Pinned dependency used by CI for deterministic public-report generation.
 reportlab==5.1.0
