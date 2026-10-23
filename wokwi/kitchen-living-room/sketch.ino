@@ -38,15 +38,14 @@ char pass[] = "";
 
 BlynkTimer timer;
 
-template <typename T>
-void blynkWriteSafe(int pin, const T &value) {
+// Compile-time wrapper: avoids cloud writes when Blynk is disabled without
+// introducing a function before the custom enum declarations (important for
+// Arduino's automatic prototype generation).
 #if ENABLE_BLYNK
-  Blynk.virtualWrite(pin, value);
+#define blynkWriteSafe(pin, value) Blynk.virtualWrite((pin), (value))
 #else
-  (void)pin;
-  (void)value;
+#define blynkWriteSafe(pin, value) do { (void)(pin); } while (0)
 #endif
-}
 
 // =====================================================
 // KITCHEN / LIVING ROOM MODULE - BLYNK + EDGE IMPULSE
