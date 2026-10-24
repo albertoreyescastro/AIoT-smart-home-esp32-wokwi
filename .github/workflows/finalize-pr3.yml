@@ -22,20 +22,20 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Preserve workflow file that cannot be pushed by GITHUB_TOKEN
+      - name: Preserve workflow file that GITHUB_TOKEN must not modify
         run: cp .github/workflows/quality.yml /tmp/quality.yml
       - name: Apply final hardening
         run: python scripts/apply_final_hardening.py
-      - name: Restore workflow and remove temporary patch script
-        run: |
-          cp /tmp/quality.yml .github/workflows/quality.yml
-          rm scripts/apply_final_hardening.py
-      - name: Run repository validation
+      - name: Run repository validation against final intended quality workflow
         run: python scripts/validate_repo.py
       - name: Run deterministic scenario contracts
         run: python scripts/test_scenarios.py
       - name: Check patch whitespace
         run: git diff --check
+      - name: Restore quality workflow and remove temporary patch script before push
+        run: |
+          cp /tmp/quality.yml .github/workflows/quality.yml
+          rm scripts/apply_final_hardening.py
       - name: Commit verified non-workflow changes
         run: |
           git config user.name "github-actions[bot]"
