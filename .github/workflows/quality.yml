@@ -2,7 +2,7 @@ name: Repository quality
 
 on:
   push:
-    branches: [main, hardening-v2-aiot-20261023]
+    branches: [main]
   pull_request:
 
 permissions:
@@ -47,10 +47,22 @@ jobs:
           arduino-cli lib install "DHT sensor library@1.4.7"
       - name: Prepare sketches for Arduino CLI
         run: |
-          mkdir -p /tmp/aiot-bedroom /tmp/aiot-kitchen
+          mkdir -p /tmp/aiot-bedroom /tmp/aiot-kitchen /tmp/aiot-kitchen-ml
           cp wokwi/bedroom/sketch.ino /tmp/aiot-bedroom/aiot-bedroom.ino
           cp wokwi/kitchen-living-room/sketch.ino /tmp/aiot-kitchen/aiot-kitchen.ino
+          cp wokwi/kitchen-living-room/sketch.ino /tmp/aiot-kitchen-ml/aiot-kitchen-ml.ino
+          cp tests/edge_impulse_mock.h /tmp/aiot-kitchen-ml/edge_impulse_mock.h
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('/tmp/aiot-kitchen-ml/aiot-kitchen-ml.ino')
+          s = p.read_text()
+          s = s.replace('#define USE_EDGE_IMPULSE_RUNTIME 0', '#define USE_EDGE_IMPULSE_RUNTIME 1', 1)
+          s = s.replace('#define EDGE_IMPULSE_INFERENCING_HEADER "your_project_inferencing.h"', '#define EDGE_IMPULSE_INFERENCING_HEADER "edge_impulse_mock.h"', 1)
+          p.write_text(s)
+          PY
       - name: Compile bedroom module
         run: arduino-cli compile --fqbn esp32:esp32:esp32s3 /tmp/aiot-bedroom
-      - name: Compile kitchen/living-room module
+      - name: Compile kitchen/living-room public default
         run: arduino-cli compile --fqbn esp32:esp32:esp32s3 /tmp/aiot-kitchen
+      - name: Compile optional Edge Impulse integration surface
+        run: arduino-cli compile --fqbn esp32:esp32:esp32s3 /tmp/aiot-kitchen-ml
