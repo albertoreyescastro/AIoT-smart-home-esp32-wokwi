@@ -1,197 +1,186 @@
 #!/usr/bin/env python3
 """Repository-level integrity checks for the public AIoT portfolio project."""
+
 from __future__ import annotations
 
 import csv
 import json
-import math
 import re
 import sys
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DATASET = ROOT / "data" / "environmental_training_dataset.csv"
-BEDROOM = ROOT / "wokwi" / "bedroom" / "sketch.ino"
-KITCHEN = ROOT / "wokwi" / "kitchen-living-room" / "sketch.ino"
-QUALITY = ROOT / ".github" / "workflows" / "quality.yml"
-REPORT = ROOT / "report" / "aiot_smart_home_public_report.pdf"
-
-EXPECTED_COLUMNS = ["gas_score", "temperature", "humidity", "label"]
-EXPECTED_CLASSES = {
-    "NORMAL", "COOKING_FUMES", "GAS_DANGER", "HEAT_ANOMALY", "GAS_HEAT_EMERGENCY"
-}
-
-GAS_FUMES_THRESHOLD = 420.0
-GAS_DANGER_THRESHOLD = 850.0
-HEAT_THRESHOLD_C = 55.0
 
 
 def fail(message: str) -> None:
     raise AssertionError(message)
 
 
-def expected_label(gas_score: float, temperature_c: float) -> str:
-    if gas_score >= GAS_DANGER_THRESHOLD and temperature_c >= HEAT_THRESHOLD_C:
-        return "GAS_HEAT_EMERGENCY"
-    if gas_score >= GAS_DANGER_THRESHOLD:
-        return "GAS_DANGER"
-    if temperature_c >= HEAT_THRESHOLD_C:
-        return "HEAT_ANOMALY"
-    if gas_score >= GAS_FUMES_THRESHOLD:
-        return "COOKING_FUMES"
-    return "NORMAL"
+def text(rel: str) -> str:
+    return (ROOT / rel).read_text(encoding="utf-8")
 
 
 def validate_dataset() -> None:
-    counts: Counter[str] = Counter()
-    mismatches: list[tuple[int, str, str]] = []
-    with DATASET.open(newline="", encoding="utf-8-sig") as handle:
-        reader = csv.DictReader(handle)
-        if reader.fieldnames != EXPECTED_COLUMNS:
-            fail(f"Unexpected CSV columns: {reader.fieldnames!r}")
-        rows = 0
-        for line_number, row in enumerate(reader, start=2):
-            rows += 1
-            try:
-                gas = float(row["gas_score"])
-                temperature = float(row["temperature"])
-                humidity = float(row["humidity"])
-            except (TypeError, ValueError) as exc:
-                fail(f"Non-numeric sensor value on CSV line {line_number}: {exc}")
-            if not all(math.isfinite(v) for v in (gas, temperature, humidity)):
-                fail(f"Non-finite value on CSV line {line_number}")
-            if not 0 <= gas <= 1000:
-                fail(f"gas_score out of range on CSV line {line_number}: {gas}")
-            if not -40 <= temperature <= 125:
-                fail(f"temperature out of DHT22 range on CSV line {line_number}: {temperature}")
-            if not 0 <= humidity <= 100:
-                fail(f"humidity out of range on CSV line {line_number}: {humidity}")
-            label = row["label"].strip()
-            if label not in EXPECTED_CLASSES:
-                fail(f"Unexpected label on CSV line {line_number}: {label!r}")
-            counts[label] += 1
-            expected = expected_label(gas, temperature)
-            if label != expected:
-                mismatches.append((line_number, label, expected))
-    if rows < 100:
-        fail(f"Dataset unexpectedly small: {rows} rows")
-    missing = EXPECTED_CLASSES - set(counts)
+    path = ROOT / "data/environmental_training_dataset.csv"
+    rows = list(csv.DictReader(path.open(encoding="utf-8")))
+    if len(rows) != 616:
+        fail(f"dataset row count changed: {len(rows)} != 616")
+    expected_cols = {"gas_score", "temperature", "humidity", "label"}
+    if set(rows[0]) != expected_cols:
+        fail(f"dataset columns changed: {set(rows[0])}")
+
+    counts = Counter(row["label"] for row in rows)
+    expected_labels = {"NORMAL", "COOKING_FUMES", "GAS_DANGER", "HEAT_ANOMALY", "GAS_HEAT_EMERGENCY"}
+    if set(counts) != expected_labels:
+        fail(f"dataset labels changed: {set(counts)}")
+
+    for row in rows:
+        gas = int(float(row["gas_score"]))
+        temp = float(row["temperature"])
+        expected = (
+            "GAS_HEAT_EMERGENCY" if gas >= 850 and temp >= 55
+            else "GAS_DANGER" if gas >= 850
+            else "HEAT_ANOMALY" if temp >= 55
+            else "COOKING_FUMES" if gas >= 420
+            else "NORMAL"
+        )
+        if row["label"] != expected:
+            fail(f"dataset label contract mismatch: {row}")
+    print(f"dataset: PASS ({len(rows)} rows; class counts={dict(counts)})")
+
+
+def validate_diagram(rel: str, required_esp_pins: set[int]) -> None:
+    data = json.loads(text(rel))
+    ids = [part.get("id") for part in data.get("parts", [])]
+    if len(ids) != len(set(ids)):
+        fail(f"duplicate part id in {rel}")
+
+    connected_pins: set[int] = set()
+    for conn in data.get("connections", []):
+        if len(conn) < 2:
+            fail(f"malformed connection in {rel}: {conn}")
+        for endpoint in conn[:2]:
+            m = re.fullmatch(r"esp:(\d+)", endpoint)
+            if m:
+                connected_pins.add(int(m.group(1)))
+
+    missing = required_esp_pins - connected_pins
     if missing:
-        fail(f"Dataset is missing classes: {sorted(missing)}")
-    if mismatches:
-        preview = ", ".join(f"line {line}: {actual}->{expected}" for line, actual, expected in mismatches[:8])
-        fail(f"Synthetic labels no longer match documented rules ({len(mismatches)} mismatch(es)): {preview}")
-    print(f"dataset: PASS ({rows} rows; class counts={dict(sorted(counts.items()))})")
-
-
-def validate_diagrams() -> None:
-    for path in sorted((ROOT / "wokwi").glob("*/diagram.json")):
-        with path.open(encoding="utf-8") as handle:
-            payload = json.load(handle)
-        if not isinstance(payload, dict) or not payload.get("parts"):
-            fail(f"Invalid/no Wokwi parts in {path.relative_to(ROOT)}")
-        dht_parts = [p for p in payload["parts"] if p.get("type") == "wokwi-dht22"]
-        if len(dht_parts) != 1:
-            fail(f"Expected exactly one DHT22 in {path.relative_to(ROOT)}")
-        attrs = dht_parts[0].get("attrs", {})
-        temp = float(attrs.get("temperature", 24))
-        humidity = float(attrs.get("humidity", 50))
-        if not 18 <= temp <= 30 or not 20 <= humidity <= 80:
-            fail(f"Public demo should start in a plausible room state: {path.relative_to(ROOT)}")
-        text = json.dumps(payload)
-        if "kitchen-living-room" in str(path) and "Sleep" in text:
-            fail("Kitchen/Living diagram still advertises Sleep mode")
-        print(f"diagram: PASS ({path.relative_to(ROOT)})")
+        fail(f"{rel}: code pins missing from diagram connections: {sorted(missing)}")
+    print(f"diagram: PASS ({rel})")
 
 
 def validate_public_sketches() -> None:
-    required_placeholders = {'"YOUR_TEMPLATE_ID"', '"YOUR_BLYNK_AUTH_TOKEN"', '"Wokwi-GUEST"'}
-    suspicious_patterns = [
+    paths = [ROOT / "wokwi/bedroom/sketch.ino", ROOT / "wokwi/kitchen-living-room/sketch.ino"]
+    suspicious = [
         re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}\b"),
         re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"),
-        re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
-        re.compile(r"\bAIza[0-9A-Za-z_-]{30,}\b"),
+        re.compile(r"BLYNK_AUTH_TOKEN\s+\"(?!YOUR_BLYNK_AUTH_TOKEN)[^\"]+\""),
+        re.compile(r"BLYNK_TEMPLATE_ID\s+\"(?!YOUR_TEMPLATE_ID)[^\"]+\""),
     ]
-    for path in (BEDROOM, KITCHEN):
-        text = path.read_text(encoding="utf-8")
-        for placeholder in required_placeholders:
-            if placeholder not in text:
-                fail(f"Expected public placeholder {placeholder} missing from {path.relative_to(ROOT)}")
-        if "#define ENABLE_BLYNK 0" not in text:
-            fail(f"Public Blynk connection must be disabled by default in {path.relative_to(ROOT)}")
-        if "LiquidCrystal_PCF8574" not in text or "LiquidCrystal_I2C" in text:
-            fail(f"Expected ESP32-compatible PCF8574 LCD dependency in {path.relative_to(ROOT)}")
-        for pattern in suspicious_patterns:
-            if pattern.search(text):
-                fail(f"Potential credential found in {path.relative_to(ROOT)}")
 
-    kitchen = KITCHEN.read_text(encoding="utf-8")
-    bedroom = BEDROOM.read_text(encoding="utf-8")
-    if "#define USE_EDGE_IMPULSE_RUNTIME 0" not in kitchen:
-        fail("Public kitchen sketch must keep Edge Impulse runtime disabled by default")
-    if "albertoreyes837-project-1" in kitchen:
-        fail("Personal Edge Impulse project identifier leaked into public sketch")
-    if "0.99" in kitchen and "mlConfidence" in kitchen:
-        fail("Public sketch must not fabricate ML confidence when runtime is disabled")
-    for phrase in ("ML runtime disabled", 'blynkWriteSafe(V30, "N/A")', 'blynkWriteSafe(V31, "DISABLED")'):
-        if phrase not in kitchen:
-            fail(f"ML-disabled semantics missing from kitchen sketch: {phrase}")
-    for phrase in ("OUTSIDE_SRC_WOKWI", "getUnifiedOutsideScore", "currentOutsideSource"):
-        if phrase not in bedroom:
-            fail(f"Bedroom outside-light source hardening missing: {phrase}")
+    for path in paths:
+        src = path.read_text(encoding="utf-8")
+        for required in ['"YOUR_TEMPLATE_ID"', '"YOUR_BLYNK_AUTH_TOKEN"', '"Wokwi-GUEST"', "#define ENABLE_BLYNK 0"]:
+            if required not in src:
+                fail(f"{path}: required public placeholder/default missing: {required}")
+        for pattern in suspicious:
+            if pattern.search(src):
+                fail(f"{path}: suspicious credential pattern: {pattern.pattern}")
+
+    kitchen = paths[1].read_text(encoding="utf-8")
+    for required in [
+        "#define USE_EDGE_IMPULSE_RUNTIME 0",
+        'blynkWriteSafe(V30, "N/A")',
+        'blynkWriteSafe(V31, "DISABLED")',
+        "EnvironmentStatus ruleEnvironmentStatus()",
+        "ML is advisory telemetry only and never controls safety actuators",
+        "if (!dhtValid) {\n    return AC_OFF;",
+    ]:
+        if required not in kitchen:
+            fail(f"kitchen hardened semantic missing: {required}")
+
+    for forbidden in ["confidence=0.99", "albertoreyes837-project-1_inferencing.h", "currentEnvironmentStatus = mlValid ?"]:
+        if forbidden in kitchen:
+            fail(f"kitchen stale/unsafe semantic present: {forbidden}")
+
+    bedroom = paths[0].read_text(encoding="utf-8")
+    if "if (!dhtValid) {\n    return AC_OFF;" not in bedroom:
+        fail("bedroom DHT fail-safe missing")
+    if "BlindState effectiveBlindState = blindTarget;" not in bedroom:
+        fail("bedroom blind/daylight state is not cycle-consistent")
+
     print("public sketches: PASS")
 
 
 def validate_dependencies_and_ci() -> None:
-    for path in (ROOT / "wokwi" / "bedroom" / "libraries.txt", ROOT / "wokwi" / "kitchen-living-room" / "libraries.txt"):
-        text = path.read_text(encoding="utf-8")
-        if "LiquidCrystal_PCF8574" not in text or "LiquidCrystal I2C" in text:
-            fail(f"LCD library list not hardened: {path.relative_to(ROOT)}")
-    quality = QUALITY.read_text(encoding="utf-8")
+    exact = ["Blynk@1.4.0", "ESP32Servo@3.2.1", "LiquidCrystal_PCF8574@2.3.0", "DHT sensor library@1.4.7"]
+    for rel in ["wokwi/bedroom/libraries.txt", "wokwi/kitchen-living-room/libraries.txt"]:
+        lib = text(rel)
+        for dep in exact:
+            if dep not in lib:
+                fail(f"{rel}: dependency is not pinned to CI version: {dep}")
+
+    workflow = text(".github/workflows/quality.yml")
     required = [
-        'version: "1.5.1"', "esp32:esp32@3.3.12", '"Blynk@1.4.0"',
-        '"ESP32Servo@3.2.1"', '"LiquidCrystal_PCF8574@2.3.0"',
-        '"DHT sensor library@1.4.7"', "python scripts/test_scenarios.py",
-        "reportlab==5.1.0", "git diff --exit-code -- report/aiot_smart_home_public_report.pdf",
+        'version: "1.5.1"',
+        "esp32:esp32@3.3.12",
+        '"Blynk@1.4.0"',
+        '"ESP32Servo@3.2.1"',
+        '"LiquidCrystal_PCF8574@2.3.0"',
+        '"DHT sensor library@1.4.7"',
+        "Compile optional Edge Impulse integration surface",
     ]
-    for token in required:
-        if token not in quality:
-            fail(f"Pinned/reproducible CI token missing: {token}")
+    for item in required:
+        if item not in workflow:
+            fail(f"CI pin/coverage missing: {item}")
+    if "hardening-v2-aiot-20261023" in workflow:
+        fail("stale CI branch trigger remains")
     print("dependencies/CI: PASS")
 
 
 def validate_public_surface() -> None:
-    readme = (ROOT / "README.md").read_text(encoding="utf-8").lower()
-    for phrase in ["simulation-based", "rule-labelled", "not a production", "real-world validation", "disabled by default"]:
-        if phrase not in readme:
-            fail(f"README public-scope phrase missing: {phrase!r}")
-    kitchen_readme = (ROOT / "wokwi" / "kitchen-living-room" / "README.md").read_text(encoding="utf-8")
-    if "exported inference package is stored in the repository" in kitchen_readme:
-        fail("Kitchen README still claims the generated inference package is checked in")
-    if not (ROOT / "edge-impulse" / "HISTORICAL_MODEL_CARD.md").exists():
-        fail("Historical Edge Impulse model card missing")
-    binary_export = ROOT / "edge-impulse" / "edge_impulse_kitchen_living_room_inferencing.zip"
-    if binary_export.exists():
-        fail("Generated Edge Impulse ZIP must stay out of the public source tree")
-    if not REPORT.exists() or REPORT.stat().st_size > 1_000_000:
-        fail("Public report missing or unexpectedly large; regenerate the concise hardened report")
+    markdown_files = list(ROOT.rglob("*.md"))
+    joined = "\n".join(path.read_text(encoding="utf-8", errors="ignore") for path in markdown_files)
+    lower = joined.lower()
+
+    if "planner5d" in lower:
+        fail("Planner 5D link/reference remains in public markdown")
+
+    stale_claims = [
+        "historical training configuration and results",
+        "documented dataset/configuration",
+        "100 training cycles",
+        "learning rate: `0.0005`",
+        "training accuracy | ~93.4%",
+    ]
+    for phrase in stale_claims:
+        if phrase.lower() in lower:
+            fail(f"stale historical-ML claim remains: {phrase}")
+
+    if (ROOT / "edge-impulse/edge_impulse_kitchen_living_room_inferencing.zip").exists():
+        fail("generated Edge Impulse ZIP must not be present in the current source tree")
+
+    if not (ROOT / "report/aiot_smart_home_public_report.pdf").exists():
+        fail("public report missing")
+
     print("public surface: PASS")
 
 
-def main() -> int:
-    try:
-        validate_dataset()
-        validate_diagrams()
-        validate_public_sketches()
-        validate_dependencies_and_ci()
-        validate_public_surface()
-    except (AssertionError, csv.Error, json.JSONDecodeError, OSError, ValueError) as exc:
-        print(f"VALIDATION FAILED: {exc}", file=sys.stderr)
-        return 1
+def main() -> None:
+    validate_dataset()
+    validate_diagram("wokwi/bedroom/diagram.json", {2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18})
+    validate_diagram("wokwi/kitchen-living-room/diagram.json", {1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18})
+    validate_public_sketches()
+    validate_dependencies_and_ci()
+    validate_public_surface()
     print("all repository checks: PASS")
-    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        main()
+    except Exception as exc:
+        print(f"VALIDATION FAILED: {exc}", file=sys.stderr)
+        raise

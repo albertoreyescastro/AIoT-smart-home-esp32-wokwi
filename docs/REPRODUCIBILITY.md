@@ -4,87 +4,52 @@ This document defines what the hardened public AIoT repository does and does not
 
 ## Public runtime defaults
 
-The repository is a **simulation-based portfolio prototype**. Both sketches keep cloud connectivity disabled by default:
+Both sketches keep `ENABLE_BLYNK` at `0`. The Kitchen/Living Room sketch also keeps `USE_EDGE_IMPULSE_RUNTIME` at `0`. A public clone therefore runs local Wokwi logic without private cloud credentials or a generated Edge Impulse package.
 
-```cpp
-#define ENABLE_BLYNK 0
-```
-
-The Kitchen/Living Room sketch also keeps the generated Edge Impulse runtime disabled by default:
-
-```cpp
-#define USE_EDGE_IMPULSE_RUNTIME 0
-```
-
-That default is intentional. A public clone should run its local Wokwi logic without requiring private Blynk credentials or a generated third-party ML package.
-
-When the Edge Impulse runtime is disabled, the kitchen/living-room environmental state is **rule-derived**. The code reports ML confidence as `N/A` and the raw ML prediction as `DISABLED`; it does not fabricate a model prediction or confidence value.
+When ML is disabled, the actionable environmental state is deterministic and persistence-gated. ML confidence is `N/A` and the raw ML prediction is `DISABLED`. If a compatible generated runtime is explicitly supplied and enabled, its prediction is advisory telemetry only and does not drive safety actuators.
 
 ## Dataset provenance
 
-`data/environmental_training_dataset.csv` contains simulated sensor values:
+`data/environmental_training_dataset.csv` contains simulated gas, temperature and humidity values. Labels are generated deterministically from project-specific demonstration boundaries. Humidity is included as an input but does not determine the synthetic ground-truth label. Strong classifier performance is therefore expected and is not independent real-world predictive validation.
 
-- `gas_score` - simulated MQ2 score, 0-1000
-- `temperature` - simulated DHT22 temperature in degrees Celsius
-- `humidity` - simulated DHT22 relative humidity in percent
+## Runtime reliability contract
 
-The labels are synthetic and deterministic:
+Kitchen/Living Room gas actions use a persistence-gated state machine: 15 s MQ2 warm-up, 2.5 s fumes persistence, 8 s normal danger persistence, 1.2 s severe-path persistence and 5 s clear persistence. The optional ML path cannot bypass these timers.
 
-| Condition | Label |
-|---|---|
-| `gas_score >= 850` and `temperature >= 55 C` | `GAS_HEAT_EMERGENCY` |
-| `gas_score >= 850` | `GAS_DANGER` |
-| `temperature >= 55 C` | `HEAT_ANOMALY` |
-| `gas_score >= 420` | `COOKING_FUMES` |
-| otherwise | `NORMAL` |
-
-These are project-specific demonstration boundaries, not calibrated safety limits. Humidity is an input feature but does not determine the synthetic ground-truth label.
-
-Because the labels are derived from the same simulated inputs used for training, strong classifier performance is expected. The historical Edge Impulse run demonstrates the TinyML workflow; it does **not** establish independent real-world predictive validity or superiority over the rules.
+If DHT data becomes invalid, both modules force the AC off. Kitchen gas monitoring remains available independently of DHT validity, while heat-only classification becomes unavailable until valid temperature/humidity data returns.
 
 ## What is reproducible from this repository
 
 A reviewer can reproduce or inspect:
 
-1. Both Wokwi ESP32-S3 room simulations.
-2. The deterministic room-control and safety logic.
-3. The complete synthetic dataset and its labelling contract.
-4. Repository validation with `python scripts/validate_repo.py`.
-5. Design-level scenario contracts with `python scripts/test_scenarios.py`.
-6. Both ESP32-S3 builds in CI using pinned toolchain/library versions.
-7. The concise public PDF report from `scripts/build_public_report.py`.
-8. Historical Edge Impulse screenshots and the recorded model card.
+1. both checked-in Wokwi ESP32-S3 room configurations;
+2. deterministic room-control and safety logic;
+3. the complete synthetic dataset and labelling contract;
+4. repository validation with `python scripts/validate_repo.py`;
+5. temporal/design scenario contracts with `python scripts/test_scenarios.py`;
+6. both public ESP32-S3 builds with pinned toolchain/library versions;
+7. a CI compile of the optional Edge Impulse integration surface using a mock generated header;
+8. the professional public PDF report;
+9. historical Edge Impulse screenshots and the evidence-based model card.
 
-The Bedroom module uses the physical Wokwi outdoor LDR by default. If Blynk is explicitly enabled, V3 can take control of the outside-light score; moving the physical LDR again returns control to Wokwi.
+The hosted Wokwi projects are convenience demos; the checked-in `sketch.ino`, `diagram.json` and `libraries.txt` files are authoritative.
 
 ## Historical Edge Impulse run vs exact reproduction
 
-The repository records the historical training configuration and results in `edge-impulse/HISTORICAL_MODEL_CARD.md` and retains screenshots under `assets/`.
+The repository preserves historical screenshots and the metrics that those screenshots support. It does **not** preserve independently verifiable machine-readable evidence for the exact historical train/validation/test split, random seed or training hyperparameters, and therefore does not assert them.
 
-The generated inferencing archive is intentionally not redistributed. The public repository also does not contain a complete hosted Edge Impulse project snapshot that guarantees byte-for-byte reconstruction of the historical training run. Therefore:
-
-- the **public deterministic demo is reproducible**;
-- an **equivalent TinyML experiment can be regenerated** from the documented dataset/configuration;
-- the **exact historical Edge Impulse run is not claimed to be bit-for-bit reproducible**.
+The generated inferencing archive is not present in the current source tree. An equivalent workflow can be recreated from the public dataset and model description, but the exact historical hosted run is not claimed to be bit-for-bit reproducible.
 
 ## Enabling optional integrations
 
 ### Blynk
 
-1. Supply your own Blynk template/auth values outside any public commit.
-2. Set `ENABLE_BLYNK` to `1`.
-3. Validate connectivity and virtual-pin configuration for your own project.
+Supply your own template/auth values outside public commits, set `ENABLE_BLYNK` to `1`, and validate your own virtual-pin configuration.
 
 ### Edge Impulse
 
-1. Create or clone your own Edge Impulse project.
-2. Import equivalent simulated data and train/test a classifier.
-3. Export an Arduino/C++ inferencing library under the terms applicable to your project/account.
-4. Add the generated library to the Arduino/Wokwi environment.
-5. Update `EDGE_IMPULSE_INFERENCING_HEADER` in `wokwi/kitchen-living-room/sketch.ino` to the generated header name.
-6. Set `USE_EDGE_IMPULSE_RUNTIME` to `1`.
-7. Validate the build and runtime on the intended target.
+Create your own Edge Impulse project, import equivalent simulated data, train/test a five-class classifier, export a compatible Arduino/C++ library, set `EDGE_IMPULSE_INFERENCING_HEADER` to its generated header, enable `USE_EDGE_IMPULSE_RUNTIME`, and validate on the intended target. The resulting ML output remains advisory unless you deliberately redesign and revalidate the safety architecture.
 
 ## Real-world validation still required
 
-A production-oriented follow-up would need calibrated physical sensors, independently labelled real data, collection-level train/validation/test separation, sensor-fault/drift tests, false-positive/false-negative analysis, actual target latency/RAM/flash/power measurements, secure credential provisioning and domain safety review.
+A production-oriented follow-up needs calibrated physical sensors, independently labelled real data, collection-aware data splits, sensor-fault/drift tests, false-positive/false-negative analysis, actual target latency/RAM/flash/power measurements, secure credential provisioning and domain safety review.

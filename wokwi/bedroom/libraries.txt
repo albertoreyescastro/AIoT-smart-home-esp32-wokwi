@@ -1,7 +1,7 @@
 # Wokwi Library List
-# See https://docs.wokwi.com/guides/libraries
+# Pinned to match GitHub Actions for reproducible builds.
 
-Blynk
-ESP32Servo
-LiquidCrystal_PCF8574
-DHT sensor library
+Blynk@1.4.0
+ESP32Servo@3.2.1
+LiquidCrystal_PCF8574@2.3.0
+DHT sensor library@1.4.7
