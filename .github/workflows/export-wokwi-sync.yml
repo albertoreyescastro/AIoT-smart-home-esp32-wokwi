@@ -1,0 +1,45 @@
+name: Export Wokwi sync package
+
+on:
+  push:
+    branches: [fix/restore-professional-latex-report]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: ${{ !contains(github.event.head_commit.message || '', '[wokwi-exported]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: fix/restore-professional-latex-report
+      - name: Build manual Wokwi sync folder
+        run: |
+          mkdir -p /tmp/AIOT_WOKWI_SYNC_FINAL/bedroom /tmp/AIOT_WOKWI_SYNC_FINAL/kitchen-living-room
+          cp wokwi/bedroom/{sketch.ino,diagram.json,libraries.txt} /tmp/AIOT_WOKWI_SYNC_FINAL/bedroom/
+          cp wokwi/kitchen-living-room/{sketch.ino,diagram.json,libraries.txt} /tmp/AIOT_WOKWI_SYNC_FINAL/kitchen-living-room/
+          cat > /tmp/AIOT_WOKWI_SYNC_FINAL/WOKWI_SYNC_README.md <<'EOF'
+          # Wokwi manual sync package
+          Source of truth: audited GitHub technical baseline `c96d98bbf83f7a4a8e16ed8aec8b192cf5f8bd68` (`c96d98b`).
+
+          Replace `sketch.ino`, `diagram.json` and `libraries.txt` in each hosted Wokwi project with the matching files in this package, save, and start the simulation.
+
+          Hardened semantics:
+          - Blynk is disabled by default in both modules.
+          - Kitchen Edge Impulse runtime is disabled by default.
+          - Kitchen actionable gas state is persistence-gated; optional ML is advisory telemetry only.
+          - DHT-invalid state forces AC OFF in both modules.
+          - Wokwi libraries are pinned to the same versions used by GitHub Actions.
+          EOF
+          cd /tmp/AIOT_WOKWI_SYNC_FINAL
+          sha256sum bedroom/* kitchen-living-room/* > CHECKSUMS.sha256
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIOT_WOKWI_SYNC_FINAL
+          path: /tmp/AIOT_WOKWI_SYNC_FINAL
+          if-no-files-found: error
+          compression-level: 9
