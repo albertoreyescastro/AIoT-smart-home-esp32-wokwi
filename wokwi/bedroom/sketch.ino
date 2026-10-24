@@ -407,8 +407,13 @@ int getIntruderThreshold() {
 // BLYNK SEND DATA
 // =====================================================
 void sendToBlynk() {
-  blynkWriteSafe(V0, currentTempC);
-  blynkWriteSafe(V1, currentHumidity);
+  if (dhtValid) {
+    blynkWriteSafe(V0, currentTempC);
+    blynkWriteSafe(V1, currentHumidity);
+  } else {
+    blynkWriteSafe(V0, "N/A");
+    blynkWriteSafe(V1, "N/A");
+  }
 
   blynkWriteSafe(V2, blynkInsideScore);
 
@@ -428,10 +433,22 @@ void sendToBlynk() {
   blynkWriteSafe(V13, petAtHome ? "YES" : "NO");
   blynkWriteSafe(V14, awayMotionCount);
   blynkWriteSafe(V15, manualLampOn ? "ON" : "OFF");
-  blynkWriteSafe(V16, thermalStateStr(blynkThermalState));
+  blynkWriteSafe(V16, dhtValid ? thermalStateStr(blynkThermalState) : "INVALID");
   blynkWriteSafe(V17, insideStateStr(blynkInsideState));
   blynkWriteSafe(V18, outsideStateStr(blynkOutsideState));
   blynkWriteSafe(V19, presenceLabel(blynkPresence, blynkInsideState));
+
+  // Keep dashboard controls aligned with physical/Serial changes.
+  int modeValue = 0;
+  if (currentMode == SLEEP_MODE) modeValue = 1;
+  else if (currentMode == PRIVACY_MODE) modeValue = 2;
+  else if (currentMode == ECO_MODE) modeValue = 3;
+  blynkWriteSafe(V20, modeValue);
+  blynkWriteSafe(V21, currentBaseProfile == PROFILE_ELDERLY ? 1 : 0);
+  blynkWriteSafe(V22, manualLampOn ? 1 : 0);
+  blynkWriteSafe(V23, childMode ? 1 : 0);
+  blynkWriteSafe(V24, currentHouseStatus == HOUSE_AWAY ? 1 : 0);
+  blynkWriteSafe(V25, petAtHome ? 1 : 0);
 }
 
 // -------------------- THERMAL HELPERS --------------------
@@ -486,6 +503,10 @@ ACState decideAC(
   BaseProfile baseProfile,
   ACState previousState
 ) {
+  if (!dhtValid) {
+    return AC_OFF;
+  }
+
   if (houseStatus == HOUSE_AWAY) {
     return AC_OFF;
   }
@@ -1053,12 +1074,21 @@ void updateLCD(
     lcd.setCursor(0, 1);
     lcd.print(pad16(line2));
   } else {
-    String line1 = "T:" + String(currentTempC, 1) + "C H:" + String((int)currentHumidity) + "%";
-    String line2 = "AC:" + String(acStateStr(currentACState)) + " " + String(thermalStateStr(thermalState));
     lcd.setCursor(0, 0);
-    lcd.print(pad16(line1));
     lcd.setCursor(0, 1);
-    lcd.print(pad16(line2));
+    if (!dhtValid) {
+      lcd.setCursor(0, 0);
+      lcd.print(pad16("DHT SENSOR ERROR"));
+      lcd.setCursor(0, 1);
+      lcd.print(pad16("AC FAIL-SAFE OFF"));
+    } else {
+      String line1 = "T:" + String(currentTempC, 1) + "C H:" + String((int)currentHumidity) + "%";
+      String line2 = "AC:" + String(acStateStr(currentACState)) + " " + String(thermalStateStr(thermalState));
+      lcd.setCursor(0, 0);
+      lcd.print(pad16(line1));
+      lcd.setCursor(0, 1);
+      lcd.print(pad16(line2));
+    }
   }
 }
 
@@ -1129,16 +1159,22 @@ void printStatus(
   Serial.print("Smart ambient light: ");
   Serial.println(lightStateStr(currentSmartLightState));
 
-  Serial.print("Temperature: ");
-  Serial.print(currentTempC, 1);
-  Serial.println(" C");
+  if (dhtValid) {
+    Serial.print("Temperature: ");
+    Serial.print(currentTempC, 1);
+    Serial.println(" C");
 
-  Serial.print("Humidity: ");
-  Serial.print(currentHumidity, 1);
-  Serial.println(" %");
+    Serial.print("Humidity: ");
+    Serial.print(currentHumidity, 1);
+    Serial.println(" %");
 
-  Serial.print("Thermal state: ");
-  Serial.println(thermalStateStr(thermalState));
+    Serial.print("Thermal state: ");
+    Serial.println(thermalStateStr(thermalState));
+  } else {
+    Serial.println("Temperature: INVALID");
+    Serial.println("Humidity: INVALID");
+    Serial.println("Thermal state: INVALID");
+  }
 
   Serial.print("AC: ");
   Serial.println(acStateStr(currentACState));
@@ -1306,7 +1342,9 @@ void loop() {
     );
   }
 
-  BlindState effectiveBlindState = maxOpenBlindState(currentBlindState, blindTarget);
+  // Use the target position immediately so daylight estimation and the
+  // commanded servo state describe the same control cycle.
+  BlindState effectiveBlindState = blindTarget;
   int daylightBoost = getBlindDaylightBoost(effectiveBlindState, outsideState, outsideScore);
 
   int insideScore = insideScoreBase + daylightBoost;
@@ -1341,7 +1379,7 @@ void loop() {
 
   float acOnThreshold  = getACOnTempThreshold(currentMode, childMode, currentBaseProfile);
   float acOffThreshold = getACOffTempThreshold(acOnThreshold);
-  ThermalState thermalState = classifyThermal(currentTempC, acOnThreshold, acOffThreshold);
+  ThermalState thermalState = dhtValid ? classifyThermal(currentTempC, acOnThreshold, acOffThreshold) : THERMAL_COMFORT;
 
   ACState acTarget = decideAC(
     currentTempC,

@@ -19,10 +19,14 @@
 // Edge Impulse runtime is optional in the public version.
 // Keep it disabled for Wokwi unless the exported Edge Impulse Arduino library
 // is installed and tested in the simulation/hardware environment.
+#ifndef USE_EDGE_IMPULSE_RUNTIME
 #define USE_EDGE_IMPULSE_RUNTIME 0
+#endif
 
 // If you enable the generated runtime, change this to your own exported header.
+#ifndef EDGE_IMPULSE_INFERENCING_HEADER
 #define EDGE_IMPULSE_INFERENCING_HEADER "your_project_inferencing.h"
+#endif
 
 #if USE_EDGE_IMPULSE_RUNTIME
 #include EDGE_IMPULSE_INFERENCING_HEADER
@@ -381,12 +385,7 @@ bool environmentHasGasIssue(EnvironmentStatus s) {
 
 bool emergencyCoolingActive() {
   if (!dhtValid) return false;
-
-  if (currentEnvironmentStatus == ENV_GAS_HEAT_EMERGENCY) {
-    return true;
-  }
-
-  return (currentGasStatus == GAS_DANGER && currentTempC >= emergencyCoolingTempC);
+  return currentEnvironmentStatus == ENV_GAS_HEAT_EMERGENCY;
 }
 
 InsideState classifyInside(int score) {
@@ -510,20 +509,7 @@ EnvironmentStatus labelToEnvironmentStatus(const char* label) {
   return ENV_UNKNOWN;
 }
 
-int environmentSeverity(EnvironmentStatus s) {
-  if (s == ENV_UNKNOWN) return 0;
-  if (s == ENV_NORMAL) return 1;
-  if (s == ENV_COOKING_FUMES) return 2;
-  if (s == ENV_HEAT_ANOMALY) return 3;
-  if (s == ENV_GAS_DANGER) return 4;
-  if (s == ENV_GAS_HEAT_EMERGENCY) return 5;
-  return 0;
-}
 
-EnvironmentStatus moreSevereEnvironment(EnvironmentStatus a, EnvironmentStatus b) {
-  if (environmentSeverity(b) > environmentSeverity(a)) return b;
-  return a;
-}
 
 const char* modeStr(RoomMode m) {
   if (m == NORMAL_MODE) return "NORMAL";
@@ -573,6 +559,7 @@ String activeAlertText() {
   if (currentGasStatus == GAS_COOKING_FUMES || currentEnvironmentStatus == ENV_COOKING_FUMES) return "COOKING FUMES";
   if (suspiciousMotion) return "SUSPICIOUS MOTION";
   if (pinAlert) return "PIN ERROR ALERT";
+  if (!dhtValid) return "DHT SENSOR ERROR";
   return "NONE";
 }
 
@@ -632,26 +619,28 @@ void getGasThresholds(int &warningThreshold, int &dangerThreshold, int &severeTh
   clearThreshold   = max(0, warningThreshold - 70);
 }
 
-EnvironmentStatus ruleEnvironmentStatus(int gasScore) {
-  if (isMq2WarmingUp() || !dhtValid) return ENV_UNKNOWN;
+EnvironmentStatus ruleEnvironmentStatus() {
+  if (isMq2WarmingUp()) return ENV_UNKNOWN;
 
-  int warningThreshold, dangerThreshold, severeThreshold, clearThreshold;
-  getGasThresholds(warningThreshold, dangerThreshold, severeThreshold, clearThreshold);
-
-  if (gasScore >= dangerThreshold && currentTempC >= emergencyCoolingTempC) {
-    return ENV_GAS_HEAT_EMERGENCY;
-  }
-
-  if (currentTempC >= emergencyCoolingTempC) {
-    return ENV_HEAT_ANOMALY;
-  }
-
-  if (gasScore >= dangerThreshold) {
+  // Gas labels come only from the persistence-gated gas state machine.
+  // A single raw MQ2 sample must never bypass those timers.
+  if (currentGasStatus == GAS_DANGER) {
+    if (dhtValid && currentTempC >= emergencyCoolingTempC) {
+      return ENV_GAS_HEAT_EMERGENCY;
+    }
     return ENV_GAS_DANGER;
   }
 
-  if (gasScore >= warningThreshold) {
+  if (currentGasStatus == GAS_COOKING_FUMES) {
     return ENV_COOKING_FUMES;
+  }
+
+  // If the DHT fails, gas monitoring remains available but heat classification
+  // becomes unknown and the AC is forced off separately as a fail-safe.
+  if (!dhtValid) return ENV_UNKNOWN;
+
+  if (currentTempC >= emergencyCoolingTempC) {
+    return ENV_HEAT_ANOMALY;
   }
 
   return ENV_NORMAL;
@@ -735,14 +724,17 @@ bool runEnvironmentClassifier(int gasScore, EnvironmentStatus &statusOut, float 
 #endif
 
 void updateEnvironmentAI(int gasScore) {
-  EnvironmentStatus ruleStatus = ruleEnvironmentStatus(gasScore);
+  // Safety/action state is always deterministic and persistence-gated.
+  // ML is advisory telemetry only and never controls safety actuators.
+  currentEnvironmentStatus = ruleEnvironmentStatus();
+
   if (isMq2WarmingUp() || !dhtValid) {
-    currentEnvironmentStatus = ruleStatus;
     lastMlEnvironmentStatus = ENV_UNKNOWN;
     mlValid = false;
     mlConfidence = 0.0;
     return;
   }
+
 #if USE_EDGE_IMPULSE_RUNTIME
   if (millis() - lastMlTime >= mlEvery) {
     lastMlTime = millis();
@@ -750,27 +742,27 @@ void updateEnvironmentAI(int gasScore) {
     float confidence;
     mlValid = runEnvironmentClassifier(gasScore, predictedStatus, confidence);
     mlConfidence = confidence;
+
     if (mlValid) {
       lastMlEnvironmentStatus = predictedStatus;
-      Serial.print("ML environmental status: ");
+      Serial.print("ML advisory status: ");
       Serial.print(environmentStatusStr(predictedStatus));
       Serial.print(" confidence=");
       Serial.println(confidence, 3);
     } else {
       lastMlEnvironmentStatus = ENV_UNKNOWN;
-      Serial.println("ML environmental status: invalid or low confidence");
+      Serial.println("ML advisory status: invalid or low confidence");
     }
   }
-  currentEnvironmentStatus = mlValid ? moreSevereEnvironment(ruleStatus, lastMlEnvironmentStatus) : ruleStatus;
 #else
-  currentEnvironmentStatus = ruleStatus;
   lastMlEnvironmentStatus = ENV_UNKNOWN;
   mlValid = false;
   mlConfidence = 0.0;
+
   if (millis() - lastMlTime >= mlEvery) {
     lastMlTime = millis();
-    Serial.print("ML runtime disabled; environmental status is rule-derived: ");
-    Serial.println(environmentStatusStr(ruleStatus));
+    Serial.print("ML runtime disabled; actionable environmental status is persistence-gated: ");
+    Serial.println(environmentStatusStr(currentEnvironmentStatus));
   }
 #endif
 }
@@ -779,8 +771,13 @@ void updateEnvironmentAI(int gasScore) {
 // BLYNK SEND DATA
 // =====================================================
 void sendToBlynk() {
-  blynkWriteSafe(V0, currentTempC);
-  blynkWriteSafe(V1, currentHumidity);
+  if (dhtValid) {
+    blynkWriteSafe(V0, currentTempC);
+    blynkWriteSafe(V1, currentHumidity);
+  } else {
+    blynkWriteSafe(V0, "N/A");
+    blynkWriteSafe(V1, "N/A");
+  }
 
   blynkWriteSafe(V2, blynkInsideScore);
 
@@ -807,7 +804,7 @@ void sendToBlynk() {
   }
 
   blynkWriteSafe(V15, emergencyCoolingActive() ? "ON" : "OFF");
-  blynkWriteSafe(V16, thermalStateStr(blynkThermalState));
+  blynkWriteSafe(V16, dhtValid ? thermalStateStr(blynkThermalState) : "INVALID");
   blynkWriteSafe(V17, insideStateStr(blynkInsideState));
   blynkWriteSafe(V18, outsideStateStr(blynkOutsideState));
   blynkWriteSafe(V19, presenceLabel(blynkPresence, blynkInsideState));
@@ -829,6 +826,14 @@ void sendToBlynk() {
   blynkWriteSafe(V30, "N/A");
   blynkWriteSafe(V31, "DISABLED");
 #endif
+
+  // Keep dashboard controls aligned with physical/Serial changes.
+  blynkWriteSafe(V20, currentMode == NORMAL_MODE ? 0 : (currentMode == PRIVACY_MODE ? 1 : 2));
+  blynkWriteSafe(V21, currentBaseProfile == PROFILE_ELDERLY ? 1 : 0);
+  blynkWriteSafe(V22, manualLampOn ? 1 : 0);
+  blynkWriteSafe(V23, childMode ? 1 : 0);
+  blynkWriteSafe(V24, currentHouseStatus == HOUSE_AWAY ? 1 : 0);
+  blynkWriteSafe(V25, petAtHome ? 1 : 0);
 }
 
 // -------------------- THERMAL HELPERS --------------------
@@ -882,6 +887,10 @@ ACState decideAC(
   BaseProfile baseProfile,
   ACState previousState
 ) {
+  if (!dhtValid) {
+    return AC_OFF;
+  }
+
   if (houseStatus == HOUSE_AWAY) {
     return AC_OFF;
   }
@@ -915,15 +924,14 @@ void updateGasStatus(int gasScore) {
 
   if (isMq2WarmingUp()) {
     resetGasTimers();
-    if (currentGasStatus != GAS_NORMAL) {
-      currentGasStatus = GAS_NORMAL;
-    }
+    currentGasStatus = GAS_NORMAL;
     return;
   }
 
   int warningThreshold, dangerThreshold, severeThreshold, clearThreshold;
   getGasThresholds(warningThreshold, dangerThreshold, severeThreshold, clearThreshold);
 
+  // Clear only after the reading has remained below the hysteresis boundary.
   if (gasScore <= clearThreshold) {
     gasWarningSince = 0;
     gasDangerSince = 0;
@@ -931,7 +939,6 @@ void updateGasStatus(int gasScore) {
 
     if (currentGasStatus != GAS_NORMAL) {
       if (gasNormalSince == 0) gasNormalSince = now;
-
       if (now - gasNormalSince >= gasClearPersistMs) {
         setGasStatus(GAS_NORMAL);
       }
@@ -951,48 +958,40 @@ void updateGasStatus(int gasScore) {
     return;
   }
 
+  // Start persistence timers, but do not change actionable state yet.
   if (gasWarningSince == 0) gasWarningSince = now;
-
-  if (gasScore >= dangerThreshold && currentGasStatus == GAS_NORMAL) {
-    setGasStatus(GAS_COOKING_FUMES);
-    gasFumesSince = now;
-  }
-
-  if (currentGasStatus == GAS_NORMAL && now - gasWarningSince >= gasWarnPersistMs) {
-    setGasStatus(GAS_COOKING_FUMES);
-    gasFumesSince = now;
-  }
-
-  if (gasScore >= severeThreshold) {
-    if (currentGasStatus == GAS_NORMAL) {
-      setGasStatus(GAS_COOKING_FUMES);
-      gasFumesSince = now;
-    }
-
-    if (gasSevereSince == 0) gasSevereSince = now;
-
-    if (now - gasSevereSince >= gasSeverePersistMs) {
-      setGasStatus(GAS_DANGER);
-    }
-    return;
-  } else {
-    gasSevereSince = 0;
-  }
 
   if (gasScore >= dangerThreshold) {
     if (gasDangerSince == 0) gasDangerSince = now;
     if (gasFumesSince == 0) gasFumesSince = now;
+  } else {
+    gasDangerSince = 0;
+  }
 
+  // Very high readings use a shorter, still persistence-gated emergency path.
+  if (gasScore >= severeThreshold) {
+    if (gasSevereSince == 0) gasSevereSince = now;
+    if (now - gasSevereSince >= gasSeverePersistMs) {
+      setGasStatus(GAS_DANGER);
+    }
+    return;
+  }
+  gasSevereSince = 0;
+
+  // Warning/fumes state requires sustained elevation.
+  if (currentGasStatus == GAS_NORMAL && now - gasWarningSince >= gasWarnPersistMs) {
+    setGasStatus(GAS_COOKING_FUMES);
+  }
+
+  // Normal danger path requires sustained danger and sustained fumes exposure.
+  if (gasScore >= dangerThreshold) {
     bool dangerPersistent = (now - gasDangerSince >= gasDangerPersistMs);
     bool fumesLongEnough = (now - gasFumesSince >= gasMinFumesBeforeDangerMs);
 
     if (currentGasStatus == GAS_COOKING_FUMES && dangerPersistent && fumesLongEnough) {
       setGasStatus(GAS_DANGER);
     }
-    return;
   }
-
-  gasDangerSince = 0;
 }
 
 // =====================================================
@@ -1510,6 +1509,11 @@ void updateLCD(
     return;
   }
 
+  if (!dhtValid && currentGasStatus == GAS_NORMAL) {
+    lcdPrint2("DHT SENSOR ERROR", "AC FAIL-SAFE OFF");
+    return;
+  }
+
   int page = (millis() / 2200) % 4;
 
   if (page == 0) {
@@ -1829,11 +1833,10 @@ void loop() {
     if (insideScoreBase > 1000) insideScoreBase = 1000;
   }
 
-  // Original rule-based gas state machine.
-  // Kept as deterministic safety fallback.
+  // Persistence-gated deterministic gas state machine.
   updateGasStatus(gasScore);
 
-  // Deterministic rules are authoritative; optional ML can only add severity when enabled.
+  // Actionable status remains deterministic. Optional ML is advisory telemetry only.
   updateEnvironmentAI(gasScore);
 
   OutsideState outsideState = classifyOutside(outsideScore);
@@ -1876,7 +1879,7 @@ void loop() {
   // -------------------- AC --------------------
   float acOnThreshold  = getACOnTempThreshold(currentMode, childMode, currentBaseProfile);
   float acOffThreshold = getACOffTempThreshold(acOnThreshold);
-  ThermalState thermalState = classifyThermal(currentTempC, acOnThreshold, acOffThreshold);
+  ThermalState thermalState = dhtValid ? classifyThermal(currentTempC, acOnThreshold, acOffThreshold) : THERMAL_COMFORT;
 
   ACState acTarget = decideAC(
     currentTempC,

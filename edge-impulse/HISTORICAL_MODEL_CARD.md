@@ -48,4 +48,4 @@ The original screenshots remain under `assets/`. These values are historical Edg
 
 ## Current public-runtime semantics
 
-The checked-in Wokwi build keeps `USE_EDGE_IMPULSE_RUNTIME` at `0`. It does not fabricate a model confidence or prediction. The deterministic environmental rules drive the public simulation, while the optional generated runtime can be enabled only by a reviewer who provides their own compatible Edge Impulse library and validates it on the intended target.
+The checked-in Wokwi build keeps `USE_EDGE_IMPULSE_RUNTIME` at `0`. It does not fabricate a model confidence or prediction. The deterministic, persistence-gated environmental rules drive the public simulation and its safety actuators. A reviewer may provide a compatible generated Edge Impulse library, but its prediction is advisory telemetry unless the architecture is deliberately redesigned and revalidated.

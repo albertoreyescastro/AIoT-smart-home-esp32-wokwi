@@ -23,7 +23,7 @@
       "top": -505.6,
       "left": -287.2,
       "attrs": {
-        "lux": "80"
+        "lux": "0.1"
       }
     },
     {
@@ -203,7 +203,7 @@
       "top": -537.6,
       "left": -326.4,
       "attrs": {
-        "text": "LDR2 (Inside) SET AT FIRST TO MINIMUM (0.1) AND DON'T TOUCH AGAIN, TREAT IT ONLY AS SENSOR\n"
+        "text": "LDR2 (Inside) - sensor input; default 0.1 lux for reproducible demo"
       }
     },
     {
